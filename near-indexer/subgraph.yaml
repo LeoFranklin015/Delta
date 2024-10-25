@@ -9,8 +9,9 @@ dataSources:
     network: near-testnet
     source:
       account: "digital-carnival01.testnet"
+      startBlock: 177491963
     mapping:
-      apiVersion: 0.0.5
+      apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
         - ExampleEntity
