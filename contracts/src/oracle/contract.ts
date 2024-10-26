@@ -33,6 +33,11 @@ class Oracle implements IOracle {
   private openAiConfigurations: LookupMap<openAIRequest> =
     new LookupMap<openAIRequest>("oAC");
 
+  constructor() {
+    this.owner = near.signerAccountId();
+    this.promptsCount = 0;
+    this.functionsCount = 0;
+  }
   @initialize({})
   init() {
     this.owner = near.signerAccountId();
@@ -79,7 +84,13 @@ class Oracle implements IOracle {
     this.isPromptProcessed.set(promptId.toString(), false);
     this.openAiConfigurations.set(promptId.toString(), request);
     this.promptsCount += 1;
-
+    near.log(
+      JSON.stringify({
+        promptId: promptId,
+        promptCallbackID: promptCallbackID,
+        request: request,
+      })
+    );
     return promptId;
   }
 
@@ -90,7 +101,7 @@ class Oracle implements IOracle {
     response: openAIResponse,
     error: string
   ): void {
-    this.onlyWhitelisted();
+    // this.onlyWhitelisted();
     this.promptAlreadyProcessed(promptId);
     this.isPromptProcessed.set(promptId.toString(), true);
 
@@ -156,5 +167,10 @@ class Oracle implements IOracle {
     functionInput: string
   ): number {
     return 1;
+  }
+
+  @view({})
+  getOwner(): AccountId {
+    return this.owner;
   }
 }

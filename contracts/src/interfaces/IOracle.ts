@@ -54,3 +54,13 @@ export interface IOracle {
     functionInput: string
   ): number;
 }
+
+export interface Content {
+  contentType: string;
+  value: string;
+}
+
+export interface Message {
+  role: string;
+  content: Content[];
+}
