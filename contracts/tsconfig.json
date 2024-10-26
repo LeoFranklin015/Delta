@@ -6,7 +6,9 @@
     "noImplicitAny": false,
   },
   "files": [
-    "src/contract.ts"
+    "src/contract.ts",
+    "src/oracle/contract.ts"
+  
   ],
   "exclude": [
     "node_modules"
