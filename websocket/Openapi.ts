@@ -15,7 +15,7 @@ export async function getOpenAIResponse(prompt: string): Promise<string> {
       " http://100.114.95.63:1234/v1/chat/completions",
       {
         // model: "gpt-3.5-turbo",
-        model: "llama-3.1-8b-lexi-uncensored-v2",
+        model: "gorilla-openfunctions-v2",
         messages: [
           {
             role: "system",
@@ -81,7 +81,7 @@ export async function getOpenAIResponse(prompt: string): Promise<string> {
           " http://100.114.95.63:1234/v1/chat/completions",
           {
             // model: "gpt-3.5-turbo",
-            model: "llama-3.1-8b-lexi-uncensored-v2",
+            model: "gorilla-openfunctions-v2",
             messages: [
               {
                 role: "system",

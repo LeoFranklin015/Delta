@@ -6,16 +6,24 @@ import {
   LookupMap,
   assert,
   NearPromise,
+  PromiseIndex,
+  initialize,
 } from "near-sdk-js";
 import { AccountId } from "near-sdk-js";
 import { openAIRequest, openAIResponse, Message } from "./interfaces/IOracle";
 
 const THIRTY_TGAS = BigInt("30000000000000");
 
-interface ChatRun {
+class ChatRun {
   owner: AccountId;
   messages: Message[];
   messagesCount: number;
+
+  constructor(owner: AccountId, messages: Message[], messagesCount: number) {
+    this.owner = owner;
+    this.messages = messages;
+    this.messagesCount = messagesCount;
+  }
 }
 @NearBindgen({})
 class ChatGPT {
@@ -25,7 +33,7 @@ class ChatGPT {
   private oracleAddress: AccountId;
   private config: openAIRequest;
 
-  constructor(initialOracleAddress: AccountId) {
+  constructor() {
     this.owner = near.predecessorAccountId();
     this.oracleAddress = "thesus.testnet";
 
@@ -45,6 +53,29 @@ class ChatGPT {
       user: "",
     };
   }
+
+  @initialize({})
+  init(): void {
+    this.owner = near.predecessorAccountId();
+    this.oracleAddress = "thesus.testnet";
+
+    this.config = {
+      model: "gpt-4-turbo-preview",
+      frequencyPenalty: 21,
+      logitBias: "",
+      maxTokens: 1000,
+      presencePenalty: 21,
+      responseFormat: '{"type":"text"}',
+      seed: 0,
+      stop: "",
+      temperature: 10,
+      topP: 101,
+      tools: "",
+      toolChoice: "none",
+      user: "",
+    };
+  }
+
   // @notice Ensures the caller is the contract owner
   private onlyOwner(): void {
     assert(near.predecessorAccountId() === this.owner, "Caller is not owner");
@@ -68,12 +99,8 @@ class ChatGPT {
   // @param message The initial message to start the chat with
   // @return The ID of the newly created chat
   @call({})
-  startChat(message: string): number {
-    const run: ChatRun = {
-      owner: near.predecessorAccountId(),
-      messages: [],
-      messagesCount: 0,
-    };
+  startChat(message: string): NearPromise {
+    const run = new ChatRun(near.predecessorAccountId(), [], 0);
 
     const newMessage = this.createTextMessage("user", message);
     run.messages.push(newMessage);
@@ -83,16 +110,38 @@ class ChatGPT {
     this.chatRuns.set(currentId.toString(), run);
     this.chatRunsCount += 1;
 
-    NearPromise.new(this.oracleAddress).functionCall(
-      "createOpenAiLlmCall",
-      JSON.stringify({
-        promptCallbackID: currentId,
-        request: this.config,
-      }),
-      BigInt(0),
-      THIRTY_TGAS
-    );
-    return currentId;
+    const promise = NearPromise.new(this.oracleAddress)
+      .functionCall(
+        "createOpenAiLlmCall",
+        JSON.stringify({
+          promptCallbackID: currentId,
+          request: this.config,
+        }),
+        BigInt(0),
+        THIRTY_TGAS
+      )
+      .then(
+        NearPromise.new(near.currentAccountId()).functionCall(
+          "startChat_callback",
+          JSON.stringify({}),
+          BigInt(0),
+          THIRTY_TGAS
+        )
+      );
+    return promise.asReturn();
+  }
+
+  // Test
+  @call({ privateFunction: true })
+  startChat_callback(): any {
+    let { result, success } = promiseResult();
+
+    if (success) {
+      return result;
+    } else {
+      near.log("Promise failed...");
+      return "";
+    }
   }
 
   // @notice Handles the response from the oracle for an OpenAI LLM call
@@ -181,7 +230,7 @@ class ChatGPT {
   @view({})
   getMessageHistory(chatId: number): Message[] {
     const run = this.chatRuns.get(chatId.toString());
-    assert(run, "Chat run not found");
+    // assert(run, "Chat run not found");
     return run.messages;
   }
 
@@ -195,4 +244,18 @@ class ChatGPT {
       content: [{ contentType: "text", value: content }],
     };
   }
+}
+
+function promiseResult(): { result: string; success: boolean } {
+  let result, success;
+
+  try {
+    result = near.promiseResult(0 as PromiseIndex);
+    success = true;
+  } catch {
+    result = undefined;
+    success = false;
+  }
+
+  return { result, success };
 }
