@@ -3,14 +3,12 @@
     "experimentalDecorators": true,
     "target": "ES5",
     "noEmit": true,
-    "noImplicitAny": false,
+    "noImplicitAny": false
   },
   "files": [
     "src/contract.ts",
-    "src/oracle/contract.ts"
-  
+    "src/oracle/contract.ts",
+    "src/AgentContract.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ],
+  "exclude": ["node_modules"]
 }
