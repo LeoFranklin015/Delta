@@ -112,10 +112,8 @@ class ChatGPT {
       .functionCall(
         "createOpenAiLlmCall",
         JSON.stringify({
-          data: {
-            promptCallbackID: currentId,
-            config: this.config,
-          },
+          promptCallbackID: currentId,
+          config: this.config,
         }),
         BigInt(0),
         THIRTY_TGAS
@@ -167,29 +165,9 @@ class ChatGPT {
       run.messages.push(newMessage);
       run.messagesCount++;
     } else {
-      if (response.functionName !== "") {
-        // IOracle(this.oracleAddress).createFunctionCall(
-        //   runId,
-        //   response.functionName,
-        //   response.functionArguments
-        // );
-        NearPromise.new(this.oracleAddress).functionCall(
-          "createOpenAiLlmCall",
-          JSON.stringify({
-            promptCallbackID: runId,
-            request: this.config,
-          }),
-          BigInt(0),
-          THIRTY_TGAS
-        );
-      } else {
-        const newMessage = this.createTextMessage(
-          "assistant",
-          response.content
-        );
-        run.messages.push(newMessage);
-        run.messagesCount++;
-      }
+      const newMessage = this.createTextMessage("assistant", response.content);
+      run.messages.push(newMessage);
+      run.messagesCount++;
     }
   }
 
@@ -228,10 +206,10 @@ class ChatGPT {
   // @param chatId The ID of the chat run
   // @return An array of messages
   @view({})
-  getMessageHistory(chatId: any): any {
-    const run = this.chatRuns.get("8");
+  getMessageHistory({ chatId }: { chatId: number }): any {
+    const run = this.chatRuns.get(chatId.toString());
     near.log(JSON.stringify(run));
-    // assert(run, "Chat run not found");
+    assert(run, "Chat run not found");
     return run.messages;
   }
 
@@ -247,7 +225,7 @@ class ChatGPT {
   }
 
   @view({})
-  public getChatRuns(chatId: any): any {
+  public getChatRuns({ chatId }: { chatId: number }): any {
     return this.chatRuns.get(chatId.toString());
   }
 }

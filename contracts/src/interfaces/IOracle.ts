@@ -47,7 +47,13 @@ export class openAIResponse {
 }
 
 export interface IOracle {
-  createOpenAiLlmCall(promptId: number, request: openAIRequest): number;
+  createOpenAiLlmCall({
+    promptCallbackID,
+    config,
+  }: {
+    promptCallbackID: number;
+    config: openAIRequest;
+  }): number;
   createFunctionCall(
     functionCallbackId: number,
     functionType: string,

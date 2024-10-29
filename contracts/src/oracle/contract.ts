@@ -70,33 +70,33 @@ class Oracle implements IOracle {
   }
 
   @call({})
-  createOpenAiLlmCall(openAiCallArgs: any): number {
-    near.log(openAiCallArgs.data.promptCallbackID);
+  createOpenAiLlmCall({
+    promptCallbackID,
+    config,
+  }: {
+    promptCallbackID: number;
+    config: openAIRequest;
+  }): number {
+    near.log(promptCallbackID);
 
-    near.log(openAiCallArgs.data.config);
+    near.log(config);
     const promptId = this.promptsCount;
     this.callbackAddresses.set(
       promptId.toString(),
       near.predecessorAccountId()
     );
 
-    this.promptCallbackIds.set(
-      promptId.toString(),
-      openAiCallArgs.data.promptCallbackID
-    );
+    this.promptCallbackIds.set(promptId.toString(), promptCallbackID);
     this.isPromptProcessed.set(promptId.toString(), false);
-    this.openAiConfigurations.set(
-      promptId.toString(),
-      openAiCallArgs.data.config
-    );
+    this.openAiConfigurations.set(promptId.toString(), config);
     this.promptsCount += 1;
     near.log(
       JSON.stringify({
         type: "createOpenAiLlmCall",
         data: {
           promptId: promptId,
-          promptCallbackID: openAiCallArgs.data.promptCallbackID,
-          config: openAiCallArgs.data.config.config,
+          promptCallbackID: promptCallbackID,
+          config: config,
           callbackAddress: near.predecessorAccountId(),
         },
       })
@@ -105,12 +105,17 @@ class Oracle implements IOracle {
   }
 
   @call({})
-  addOpenAiResponse(
-    promptId: number,
-    promptCallbackID: number,
-    response: openAIResponse,
-    error: string
-  ): void {
+  addOpenAiResponse({
+    promptId,
+    promptCallbackID,
+    response,
+    error,
+  }: {
+    promptId: number;
+    promptCallbackID: number;
+    response: openAIResponse;
+    error: string;
+  }): void {
     // this.onlyWhitelisted();
     this.promptAlreadyProcessed(promptId);
     this.isPromptProcessed.set(promptId.toString(), true);

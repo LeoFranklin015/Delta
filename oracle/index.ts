@@ -2,6 +2,7 @@ import WebSocket from "ws";
 import { getOpenAIResponse } from "./Openapi";
 import { callback } from "./nearCall";
 import { getMessages } from "./utils/getMessages";
+import { callOpenAI } from "./utils/openAi";
 const socketUrl = "wss://ws-events.intear.tech/events-testnet/log_text";
 const message = JSON.stringify({ account_id: "oracletest1.testnet" });
 
@@ -29,10 +30,19 @@ ws.on("message", async (data) => {
     console.log("data" + parsedData.data);
     console.log(parsedData.data.promptCallbackID);
     console.log(parsedData.data.callbackAddress);
-    await getMessages(
+    const message = await getMessages(
       parsedData.data.promptCallbackID,
       parsedData.data.callbackAddress
     );
+    console.log("messgae :" + message.decodedValue);
+    console.log(message.decodedValue);
+    console.log("Type of decodedValue:", typeof message.decodedValue);
+    console.log(message.decodedValue);
+    const openAIResponse = await callOpenAI(
+      message.decodedValue,
+      parsedData.data.config
+    );
+    console.log(openAIResponse);
 
     //get messageHoistrtoy from the contract - prompt - use wit
 

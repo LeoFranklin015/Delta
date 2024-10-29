@@ -22,7 +22,6 @@ export const getMessages = async (chatId: number, callbackAddress: string) => {
   if ("SuccessValue" in (res.status as any)) {
     const successValue = (res.status as any).SuccessValue;
     const decodedValue = Buffer.from(successValue, "base64").toString();
-    console.log("decoded value: ", decodedValue);
 
     return {
       decodedValue,
