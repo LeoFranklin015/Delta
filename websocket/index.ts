@@ -1,8 +1,9 @@
 import WebSocket from "ws";
 import { getOpenAIResponse } from "./Openapi";
 import { callback } from "./nearCall";
+import { getMessages } from "./utils/getMessages";
 const socketUrl = "wss://ws-events.intear.tech/events-testnet/log_text";
-const message = JSON.stringify({ account_id: "leorocks.testnet" });
+const message = JSON.stringify({ account_id: "oracletest1.testnet" });
 
 console.log("Attempting to connect to WebSocket...");
 
@@ -21,10 +22,22 @@ ws.on("message", async (data) => {
   const parsedData = JSON.parse(parseddata);
 
   // Accessing the `data` array from the log_text
-  if (parsedData.data && Array.isArray(parsedData.data)) {
-    console.log("Greeting:", parsedData.data[0].greeting);
-    const response = await getOpenAIResponse(parsedData.data[0].greeting);
-    console.log("Response:", response);
+  if (parsedData.data) {
+    // console.log("Greeting:", parsedData.data[0].greeting);
+
+    // get the prompt form reciver cpontract
+    console.log("data" + parsedData.data);
+    console.log(parsedData.data.promptCallbackID);
+    console.log(parsedData.data.callbackAddress);
+    await getMessages(
+      parsedData.data.promptCallbackID,
+      parsedData.data.callbackAddress
+    );
+
+    //get messageHoistrtoy from the contract - prompt - use wit
+
+    // const response = await getOpenAIResponse(parsedData.data[0].greeting);
+    // console.log("Response:", response);
     // await callback(response);
   }
 });

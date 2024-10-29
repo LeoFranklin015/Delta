@@ -70,25 +70,35 @@ class Oracle implements IOracle {
   }
 
   @call({})
-  createOpenAiLlmCall(
-    promptCallbackID: number,
-    request: openAIRequest
-  ): number {
+  createOpenAiLlmCall(openAiCallArgs: any): number {
+    near.log(openAiCallArgs.data.promptCallbackID);
+
+    near.log(openAiCallArgs.data.config);
     const promptId = this.promptsCount;
     this.callbackAddresses.set(
       promptId.toString(),
       near.predecessorAccountId()
     );
 
-    this.promptCallbackIds.set(promptId.toString(), promptCallbackID);
+    this.promptCallbackIds.set(
+      promptId.toString(),
+      openAiCallArgs.data.promptCallbackID
+    );
     this.isPromptProcessed.set(promptId.toString(), false);
-    this.openAiConfigurations.set(promptId.toString(), request);
+    this.openAiConfigurations.set(
+      promptId.toString(),
+      openAiCallArgs.data.config
+    );
     this.promptsCount += 1;
     near.log(
       JSON.stringify({
-        promptId: promptId,
-        promptCallbackID: promptCallbackID,
-        request: request,
+        type: "createOpenAiLlmCall",
+        data: {
+          promptId: promptId,
+          promptCallbackID: openAiCallArgs.data.promptCallbackID,
+          config: openAiCallArgs.data.config.config,
+          callbackAddress: near.predecessorAccountId(),
+        },
       })
     );
     return promptId;
@@ -116,6 +126,17 @@ class Oracle implements IOracle {
       }),
       BigInt(0),
       THIRTY_TGAS
+    );
+    near.log(
+      JSON.stringify({
+        type: "createOpenAiLlmCall",
+        data: {
+          promptId: promptId,
+          promptCallbackID: promptCallbackID,
+          response: response,
+          error: error,
+        },
+      })
     );
   }
 
@@ -172,5 +193,20 @@ class Oracle implements IOracle {
   @view({})
   getOwner(): AccountId {
     return this.owner;
+  }
+
+  @view({})
+  getCallbackAddress(promptId: string): AccountId | null {
+    return this.callbackAddresses.get(promptId);
+  }
+
+  @view({})
+  getPromptCallbackId(promptId: string): number | null {
+    return this.promptCallbackIds.get(promptId);
+  }
+
+  @view({})
+  getIsPromptProcessed(promptId: string): boolean | null {
+    return this.isPromptProcessed.get(promptId);
   }
 }

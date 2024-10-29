@@ -14,28 +14,22 @@ import { openAIRequest, openAIResponse, Message } from "./interfaces/IOracle";
 
 const THIRTY_TGAS = BigInt("30000000000000");
 
-class ChatRun {
+interface ChatRun {
   owner: AccountId;
   messages: Message[];
   messagesCount: number;
-
-  constructor(owner: AccountId, messages: Message[], messagesCount: number) {
-    this.owner = owner;
-    this.messages = messages;
-    this.messagesCount = messagesCount;
-  }
 }
 @NearBindgen({})
 class ChatGPT {
-  private owner: AccountId;
-  private chatRuns: LookupMap<ChatRun> = new LookupMap<ChatRun>("chatRuns");
-  private chatRunsCount: number = 0;
-  private oracleAddress: AccountId;
-  private config: openAIRequest;
+  public owner: AccountId;
+  public chatRuns: LookupMap<ChatRun> = new LookupMap<ChatRun>("chatRuns");
+  public chatRunsCount: number = 0;
+  public oracleAddress: AccountId;
+  public config: openAIRequest;
 
   constructor() {
     this.owner = near.predecessorAccountId();
-    this.oracleAddress = "thesus.testnet";
+    this.oracleAddress = "oracletest1.testnet";
 
     this.config = {
       model: "gpt-4-turbo-preview",
@@ -57,7 +51,7 @@ class ChatGPT {
   @initialize({})
   init(): void {
     this.owner = near.predecessorAccountId();
-    this.oracleAddress = "thesus.testnet";
+    this.oracleAddress = "oracletest1.testnet";
 
     this.config = {
       model: "gpt-4-turbo-preview",
@@ -100,7 +94,11 @@ class ChatGPT {
   // @return The ID of the newly created chat
   @call({})
   startChat(message: string): NearPromise {
-    const run = new ChatRun(near.predecessorAccountId(), [], 0);
+    const run: ChatRun = {
+      owner: near.predecessorAccountId(),
+      messages: [],
+      messagesCount: 0,
+    };
 
     const newMessage = this.createTextMessage("user", message);
     run.messages.push(newMessage);
@@ -114,8 +112,10 @@ class ChatGPT {
       .functionCall(
         "createOpenAiLlmCall",
         JSON.stringify({
-          promptCallbackID: currentId,
-          request: this.config,
+          data: {
+            promptCallbackID: currentId,
+            config: this.config,
+          },
         }),
         BigInt(0),
         THIRTY_TGAS
@@ -167,7 +167,7 @@ class ChatGPT {
       run.messages.push(newMessage);
       run.messagesCount++;
     } else {
-      if (response.content === "") {
+      if (response.functionName !== "") {
         // IOracle(this.oracleAddress).createFunctionCall(
         //   runId,
         //   response.functionName,
@@ -228,8 +228,9 @@ class ChatGPT {
   // @param chatId The ID of the chat run
   // @return An array of messages
   @view({})
-  getMessageHistory(chatId: number): Message[] {
-    const run = this.chatRuns.get(chatId.toString());
+  getMessageHistory(chatId: any): any {
+    const run = this.chatRuns.get("8");
+    near.log(JSON.stringify(run));
     // assert(run, "Chat run not found");
     return run.messages;
   }
@@ -243,6 +244,11 @@ class ChatGPT {
       role: role,
       content: [{ contentType: "text", value: content }],
     };
+  }
+
+  @view({})
+  public getChatRuns(chatId: any): any {
+    return this.chatRuns.get(chatId.toString());
   }
 }
 

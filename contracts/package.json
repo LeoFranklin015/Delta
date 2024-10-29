@@ -5,16 +5,21 @@
   "type": "module",
   "scripts": {
     "build-oracle": "near-sdk-js build src/oracle/contract.ts build/oracle.wasm",
-    "build-consumer": "near-sdk-js build src/consumer/contract.ts build/consumer.wasm",
-    "deploy-oracle": "near deploy oracletest.testnet ./build/oracle.wasm",
-    "deploy-consumer": "near deploy consumer123.testnet ./build/consumer.wasm",
-    "test": "$npm_execpath run build && ava -- ./build/oracle.wasm",
-    "init-consumer": "near call oracletest.testnet init '{}' --accountId consumer123.testnet",
-    "init-oracle": "near call oracletest.testnet init '{}' --accountId oracletest.testnet",
-    "start-chat": "near call consumer123.testnet startChat '{\"message\": \"whats your name\"}' --accountId consumer123.testnet --gas 300000000000000",
-    "create-oracle-account": "near create-account oracletest.testnet --useFaucet",
-    "create-consumer-account": "near create-account consumer123.testnet --useFaucet",
-    "get-messages": "near call consumer123.testnet getMessageHistory '{\"chatId\": 0}' --accountId consumer123.testnet"
+    "build-consumer": "near-sdk-js build src/contract.ts build/consumer.wasm",
+
+    "create-oracle-account": "near create-account oracletest1.testnet --useFaucet",
+    "create-consumer-account": "near create-account consumer1234.testnet --useFaucet",
+
+    "deploy-oracle": "near deploy oracletest1.testnet ./build/oracle.wasm",
+    "deploy-consumer": "near deploy consumer1234.testnet ./build/consumer.wasm",
+
+    "init-consumer": "near call oracletest1.testnet init '{}' --accountId consumer1234.testnet",
+    "init-oracle": "near call oracletest1.testnet init '{}' --accountId oracletest1.testnet",
+    
+    "start-chat": "near call consumer1234.testnet startChat '{\"message\": \"whats your name\"}' --accountId consumer1234.testnet --gas 300000000000000",
+    
+    "get-messages": "near call consumer1234.testnet getMessageHistory '{\"chatId\": 0}' --accountId consumer1234.testnet",
+        "test": "$npm_execpath run build && ava -- ./build/oracle.wasm"
   },
   "dependencies": {
     "near-sdk-js": "2.0.0"
