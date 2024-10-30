@@ -54,11 +54,15 @@ export interface IOracle {
     promptCallbackID: number;
     config: openAIRequest;
   }): number;
-  createFunctionCall(
-    functionCallbackId: number,
-    functionType: string,
-    functionInput: string
-  ): number;
+  createFunctionCall({
+    functionCallbackId,
+    functionType,
+    functionInput,
+  }: {
+    functionCallbackId: number;
+    functionType: string;
+    functionInput: string;
+  }): number;
 }
 
 export interface Content {

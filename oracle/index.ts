@@ -4,6 +4,7 @@ import { callback } from "./nearCall";
 import { getMessages } from "./utils/getMessages";
 import { callOpenAI } from "./utils/openAi";
 import { sendResponseToOracle } from "./utils/sendResponseOracle";
+import { tools } from "./utils/tools";
 const socketUrl = "wss://ws-events.intear.tech/events-testnet/log_text";
 const message = JSON.stringify({ account_id: "oracletest1.testnet" });
 
@@ -27,8 +28,6 @@ ws.on("message", async (data) => {
   if (parsedData.data) {
     // get the prompt form reciver cpontract
     console.log("data" + parsedData.data);
-    console.log(parsedData.data.promptCallbackID);
-    console.log(parsedData.data.callbackAddress);
     if (parsedData.type === "createOpenAiLlmCall") {
       const message = await getMessages(
         parsedData.data.promptCallbackID,
@@ -44,12 +43,15 @@ ws.on("message", async (data) => {
         openAIResponse.response,
         openAIResponse.error
       );
+    } else if (parsedData.type == "createFunctionCall") {
+      console.log(parsedData.data.functionType);
+      console.log(parsedData.data.functionInput);
+      const response = await tools(
+        parsedData.data.functionType,
+        parsedData.data.functionInput
+      );
+      console.log(response);
     }
-    //get messageHoistrtoy from the contract - prompt - use wit
-
-    // const response = await getOpenAIResponse(parsedData.data[0].greeting);
-    // console.log("Response:", response);
-    // await callback(response);
   }
 });
 

@@ -8,7 +8,9 @@
   "files": [
     "src/contract.ts",
     "src/oracle/contract.ts",
-    "src/AgentContract.ts"
+    "src/AgentContract.ts",
+    "src/functionCallContract/contract.ts",
+    "src/functionCallContract/contract1.ts"
   ],
   "exclude": ["node_modules"]
 }

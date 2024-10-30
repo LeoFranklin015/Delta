@@ -30,7 +30,9 @@ export const getMessages = async (chatId: number, callbackAddress: string) => {
     for (let i = 0; i < parsedMessages.length; i++) {
       const messages = {
         role: parsedMessages[i].role,
-        content: parsedMessages[i].content[0].value.message,
+        content:
+          parsedMessages[i].content[0].value.message ||
+          parsedMessages[i].content[0].value,
       };
       openAIReqMessages.push(messages);
     }

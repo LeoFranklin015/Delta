@@ -10,12 +10,10 @@ export async function getOpenAIResponse(prompt: string): Promise<string> {
 
     // Initial call to OpenAI using Axios
     const initialResponse = await axios.post(
-      // "https://api.openai.com/v1/chat/completions"
+      "https://api.openai.com/v1/chat/completions",
 
-      " http://100.114.95.63:1234/v1/chat/completions",
       {
-        // model: "gpt-3.5-turbo",
-        model: "gorilla-openfunctions-v2",
+        model: "gpt-3.5-turbo",
         messages: [
           {
             role: "system",
@@ -66,22 +64,12 @@ export async function getOpenAIResponse(prompt: string): Promise<string> {
         console.log("Web searched");
         // Call OpenAI again with the search results using Axios
 
-        const response = {
-          choices: [
-            {
-              message: {
-                tool_calls: [{ id: toolCall.id }],
-              },
-            },
-          ],
-        };
-
         const finalResponse = await axios.post(
-          // "https://api.openai.com/v1/chat/completions"
-          " http://100.114.95.63:1234/v1/chat/completions",
+          "https://api.openai.com/v1/chat/completions",
+
           {
-            // model: "gpt-3.5-turbo",
-            model: "gorilla-openfunctions-v2",
+            model: "gpt-3.5-turbo",
+
             messages: [
               {
                 role: "system",
@@ -104,7 +92,7 @@ export async function getOpenAIResponse(prompt: string): Promise<string> {
             },
           }
         );
-
+        console.log(finalResponse.data.choices[0].message.content);
         const finalContent =
           finalResponse.data.choices[0].message.content ||
           "No response generated.";
@@ -118,3 +106,5 @@ export async function getOpenAIResponse(prompt: string): Promise<string> {
     return "An error occurred while processing your request.";
   }
 }
+
+getOpenAIResponse("who was the president of the united states in 1990");

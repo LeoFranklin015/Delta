@@ -30,6 +30,14 @@ class Oracle implements IOracle {
   private promptCallbackIds: LookupMap<number> = new LookupMap<number>("pCI");
   private isPromptProcessed: LookupMap<boolean> = new LookupMap<boolean>("iPP");
 
+  private functionCallbackAddresses: LookupMap<AccountId> =
+    new LookupMap<AccountId>("FCA");
+
+  private functionCallbackIds: LookupMap<number> = new LookupMap<number>("fCI");
+  private isFunctionProcessed: LookupMap<boolean> = new LookupMap<boolean>(
+    "iFP"
+  );
+
   // @notice Mapping of prompt ID to the OpenAI configuration
   private openAiConfigurations: LookupMap<openAIRequest> =
     new LookupMap<openAIRequest>("oAC");
@@ -208,12 +216,92 @@ class Oracle implements IOracle {
     return promise;
   }
 
-  createFunctionCall(
-    functionCallbackId: number,
-    functionType: string,
-    functionInput: string
-  ): number {
-    return 1;
+  createFunctionCall({
+    functionCallbackId,
+    functionType,
+    functionInput,
+  }: {
+    functionCallbackId: number;
+    functionType: string;
+    functionInput: string;
+  }): number {
+    const functionId = this.functionsCount;
+    this.functionCallbackAddresses.set(
+      functionId.toString(),
+      near.predecessorAccountId()
+    );
+    this.functionCallbackIds.set(functionId.toString(), functionCallbackId);
+    this.isFunctionProcessed.set(functionId.toString(), false);
+    this.functionsCount += 1;
+    near.log(
+      JSON.stringify({
+        type: "createFunctionCall",
+        data: {
+          functionId: functionId,
+          functionCallbackId: functionCallbackId,
+          functionType: functionType,
+          functionInput: functionInput,
+          callbackAddress: near.predecessorAccountId(),
+        },
+      })
+    );
+
+    return functionId;
+  }
+
+  @call({})
+  addFunctionResponse({
+    functionId,
+    functionCallbackId,
+    response,
+    error,
+  }: {
+    functionId: number;
+    functionCallbackId: number;
+    response: string;
+    error: string;
+  }): NearPromise {
+    // this.onlyWhitelisted();
+    // this.functionAlreadyProcessed(functionId);
+    this.isFunctionProcessed.set(functionId.toString(), true);
+
+    const callbackAddress = this.functionCallbackAddresses.get(
+      functionId.toString()
+    );
+    assert(callbackAddress != null, "Callback address not found");
+
+    const promise = NearPromise.new(callbackAddress)
+      .functionCall(
+        "onOracleFunctionResponse",
+        JSON.stringify({
+          runId: functionCallbackId,
+          response: response,
+          errorMessage: error,
+        }),
+        BigInt(0),
+        THIRTY_TGAS
+      )
+      .then(
+        NearPromise.new(near.currentAccountId()).functionCall(
+          "addFunctionResponse_callback",
+          JSON.stringify({}),
+          BigInt(0),
+          THIRTY_TGAS
+        )
+      );
+    near.log(
+      JSON.stringify({
+        type: "onOracleFunctionResponse",
+        data: {
+          functionId: functionId,
+          functionCallbackId: functionCallbackId,
+          response: response,
+          error: error,
+        },
+      })
+    );
+
+    return promise.asReturn();
   }
 
   @view({})
