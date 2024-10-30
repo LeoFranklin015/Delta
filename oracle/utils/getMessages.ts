@@ -43,4 +43,4 @@ export const getMessages = async (chatId: number, callbackAddress: string) => {
   }
 };
 
-// getMessages(44, "consumer1234.testnet");
+// getMessages(44, "consumer12345.testnet");

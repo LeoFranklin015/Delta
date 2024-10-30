@@ -34,12 +34,12 @@ const ws = new WebSocket(nearIndexerWS);
     //   )
     // );
     // TODO: Configure the oracle account id
-    const message = JSON.stringify({ account_id: "oracletest1.testnet" });
+    const message = JSON.stringify({ account_id: "oracletest2.testnet" });
 
     console.log("WebSocket connection established");
     console.log("Sending message:", message);
     ws.send(message);
-    // ws.send(JSON.stringify({ account_id: "oracletest1.testnet" }));
+    // ws.send(JSON.stringify({ account_id: "oracletest2.testnet" }));
   });
 
   ws.on("message", async (data) => {

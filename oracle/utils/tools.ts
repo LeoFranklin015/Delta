@@ -2,22 +2,27 @@ import { websearch } from "../websearch";
 
 export const tools = async (functionName: string, functionArgs: any) => {
   switch (functionName) {
-    case "webSearch": {
-      const web_response = await websearch(functionArgs.query);
+    case "websearch": {
+      const web_response = await websearch(JSON.parse(functionArgs).query);
       console.log(web_response);
       if (web_response) {
-        const response = {
-          response: web_response,
+        return {
+          response: web_response.result,
           error: "",
         };
-        return response;
       } else {
-        const response = {
+        return {
           response: "",
           error: "Error in websearch",
         };
-        return response;
       }
+      break;
+    }
+    default: {
+      return {
+        response: "",
+        error: "Function not found",
+      };
     }
   }
 };

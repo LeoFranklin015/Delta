@@ -29,7 +29,7 @@ class ChatGPTFunctionCall {
 
   constructor() {
     this.owner = near.predecessorAccountId();
-    this.oracleAddress = "oracletest1.testnet";
+    this.oracleAddress = "oracletest2.testnet";
 
     this.config = {
       model: "gpt-4-turbo-preview",
@@ -51,7 +51,7 @@ class ChatGPTFunctionCall {
   @initialize({})
   init(): void {
     this.owner = near.predecessorAccountId();
-    this.oracleAddress = "oracletest1.testnet";
+    this.oracleAddress = "oracletest2.testnet";
 
     this.config = {
       model: "gpt-4-turbo-preview",

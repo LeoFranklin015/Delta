@@ -1,15 +1,15 @@
 import * as nearAPI from "near-api-js";
 import { account } from "../nearCall";
 
-export const sendResponseToOracle = async (
-  promptId: number,
-  promptCallbackID: number,
+export const sendFunctionResponse = async (
+  functionId: number,
+  functionCallbackId: number,
   response: any,
   error: string
 ) => {
   const args = {
-    promptId,
-    promptCallbackID,
+    functionId,
+    functionCallbackId,
     response,
     error,
   };
@@ -17,7 +17,7 @@ export const sendResponseToOracle = async (
   try {
     res = await account.functionCall({
       contractId: "oracletest2.testnet",
-      methodName: "addOpenAiResponse",
+      methodName: "addFunctionResponse",
       args: args,
       gas: BigInt(300000000000000),
     });

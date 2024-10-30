@@ -14,6 +14,7 @@ import { AccountId } from "near-sdk-js";
 import { IOracle, openAIRequest, openAIResponse } from "../interfaces/IOracle";
 
 const THIRTY_TGAS = BigInt("30000000000000");
+const HUNDRED_TGAS = BigInt("100000000000000");
 
 @NearBindgen({ requireInit: true })
 class Oracle implements IOracle {
@@ -138,7 +139,7 @@ class Oracle implements IOracle {
           errorMessage: error,
         }),
         BigInt(0),
-        THIRTY_TGAS
+        HUNDRED_TGAS
       )
       .then(
         NearPromise.new(near.currentAccountId()).functionCall(
@@ -216,6 +217,7 @@ class Oracle implements IOracle {
     return promise;
   }
 
+  @call({})
   createFunctionCall({
     functionCallbackId,
     functionType,
@@ -279,7 +281,7 @@ class Oracle implements IOracle {
           errorMessage: error,
         }),
         BigInt(0),
-        THIRTY_TGAS
+        HUNDRED_TGAS
       )
       .then(
         NearPromise.new(near.currentAccountId()).functionCall(
@@ -302,6 +304,17 @@ class Oracle implements IOracle {
     );
 
     return promise.asReturn();
+  }
+
+  @call({})
+  addFunctionResponse_callback(): any {
+    let { result, success } = promiseResult();
+
+    if (success) {
+      return result;
+    } else {
+      return "";
+    }
   }
 
   @view({})

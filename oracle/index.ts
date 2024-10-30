@@ -5,8 +5,9 @@ import { getMessages } from "./utils/getMessages";
 import { callOpenAI } from "./utils/openAi";
 import { sendResponseToOracle } from "./utils/sendResponseOracle";
 import { tools } from "./utils/tools";
+import { sendFunctionResponse } from "./utils/sendFunctionResponse";
 const socketUrl = "wss://ws-events.intear.tech/events-testnet/log_text";
-const message = JSON.stringify({ account_id: "oracletest1.testnet" });
+const message = JSON.stringify({ account_id: "oracletest2.testnet" });
 
 console.log("Attempting to connect to WebSocket...");
 
@@ -50,7 +51,14 @@ ws.on("message", async (data) => {
         parsedData.data.functionType,
         parsedData.data.functionInput
       );
+
       console.log(response);
+      await sendFunctionResponse(
+        parseInt(parsedData.data.functionId),
+        parseInt(parsedData.data.functionCallbackId),
+        response.response,
+        response.error
+      );
     }
   }
 });

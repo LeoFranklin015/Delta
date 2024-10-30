@@ -13,6 +13,7 @@ import { AccountId } from "near-sdk-js";
 import { openAIRequest, openAIResponse, Message } from "../interfaces/IOracle";
 
 const THIRTY_TGAS = BigInt("30000000000000");
+const SIXTY_TGAS = BigInt("60000000000000");
 
 interface ChatRun {
   owner: AccountId;
@@ -30,7 +31,7 @@ class FunctionCall {
 
   constructor() {
     this.owner = near.predecessorAccountId();
-    this.oracleAddress = "oracletest1.testnet";
+    this.oracleAddress = "oracletest2.testnet";
 
     this.config = {
       model: "gpt-3.5-turbo",
@@ -53,7 +54,7 @@ class FunctionCall {
   @initialize({})
   init(): void {
     this.owner = near.predecessorAccountId();
-    this.oracleAddress = "oracletest1.testnet";
+    this.oracleAddress = "oracletest2.testnet";
 
     this.config = {
       model: "gpt-3.5-turbo",
@@ -139,7 +140,7 @@ class FunctionCall {
     runId: number;
     response: openAIResponse;
     errorMessage: string;
-  }): void {
+  }): any {
     this.onlyOracle();
     const run = this.chatRuns.get(runId.toString());
     assert(run, "Chat run not found");
@@ -175,6 +176,7 @@ class FunctionCall {
             )
           );
         near.log("Function call created" + response.functionName);
+        return promise.asReturn();
       } else {
         const newMessage = this.createTextMessage(
           "assistant",
@@ -196,11 +198,11 @@ class FunctionCall {
     runId: number;
     response: string;
     errorMessage: string;
-  }): void {
+  }): NearPromise {
     this.onlyOracle();
     const run = this.chatRuns.get(runId.toString());
     assert(run, "Chat run not found");
-    if (errorMessage === "") {
+    if (response.length > 0) {
       const newMessage = this.createTextMessage("user", response);
       run.messages.push(newMessage);
       run.messagesCount++;
@@ -223,6 +225,8 @@ class FunctionCall {
             THIRTY_TGAS
           )
         );
+
+      return promise.asReturn();
     }
   }
 

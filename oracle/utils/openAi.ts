@@ -6,20 +6,22 @@ import { tools } from "./tools";
 dotenv.config();
 
 export async function callOpenAI(message: any[], config: any): Promise<any> {
-  console.log("Input message:", message);
-  console.log("Input config", typeof config.tools);
-  console.log("Input config", JSON.parse(config.tools));
   try {
     // Initial call to OpenAI using Axios
+    const requestBody: any = {
+      model: "gpt-3.5-turbo",
+      messages: message,
+      max_tokens: 150,
+    };
+
+    if (config.tools && config.tools.length > 0) {
+      requestBody.tools = JSON.parse(config.tools);
+      requestBody.tool_choice = "auto";
+    }
+
     const initialResponse = await axios.post(
       "https://api.openai.com/v1/chat/completions",
-      {
-        model: "gpt-3.5-turbo",
-        messages: message,
-        max_tokens: 150,
-        tools: JSON.parse(config.tools),
-        tool_choice: "auto",
-      },
+      requestBody,
       {
         headers: {
           Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
