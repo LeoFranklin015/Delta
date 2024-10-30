@@ -3,6 +3,7 @@ import { getOpenAIResponse } from "./Openapi";
 import { callback } from "./nearCall";
 import { getMessages } from "./utils/getMessages";
 import { callOpenAI } from "./utils/openAi";
+import { sendResponseToOracle } from "./utils/sendResponseOracle";
 const socketUrl = "wss://ws-events.intear.tech/events-testnet/log_text";
 const message = JSON.stringify({ account_id: "oracletest1.testnet" });
 
@@ -24,26 +25,26 @@ ws.on("message", async (data) => {
 
   // Accessing the `data` array from the log_text
   if (parsedData.data) {
-    // console.log("Greeting:", parsedData.data[0].greeting);
-
     // get the prompt form reciver cpontract
     console.log("data" + parsedData.data);
     console.log(parsedData.data.promptCallbackID);
     console.log(parsedData.data.callbackAddress);
-    const message = await getMessages(
-      parsedData.data.promptCallbackID,
-      parsedData.data.callbackAddress
-    );
-    console.log("messgae :" + message.decodedValue);
-    console.log(message.decodedValue);
-    console.log("Type of decodedValue:", typeof message.decodedValue);
-    console.log(message.decodedValue);
-    const openAIResponse = await callOpenAI(
-      message.decodedValue,
-      parsedData.data.config
-    );
-    console.log(openAIResponse);
-
+    if (parsedData.type === "createOpenAiLlmCall") {
+      const message = await getMessages(
+        parsedData.data.promptCallbackID,
+        parsedData.data.callbackAddress
+      );
+      console.log("messgae :" + message);
+      console.log(`typeof message` + message);
+      const openAIResponse = await callOpenAI(message, parsedData.data.config);
+      console.log(openAIResponse);
+      await sendResponseToOracle(
+        parseInt(parsedData.data.promptId),
+        parseInt(parsedData.data.promptCallbackID),
+        openAIResponse.response,
+        openAIResponse.error
+      );
+    }
     //get messageHoistrtoy from the contract - prompt - use wit
 
     // const response = await getOpenAIResponse(parsedData.data[0].greeting);

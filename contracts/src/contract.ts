@@ -33,15 +33,15 @@ class ChatGPT {
 
     this.config = {
       model: "gpt-4-turbo-preview",
-      frequencyPenalty: 21,
+      frequencyPenalty: 0.0,
       logitBias: "",
       maxTokens: 1000,
-      presencePenalty: 21,
+      presencePenalty: 0.0,
       responseFormat: '{"type":"text"}',
       seed: 0,
       stop: "",
-      temperature: 10,
-      topP: 101,
+      temperature: 0.7,
+      topP: 1,
       tools: "",
       toolChoice: "none",
       user: "",
@@ -55,15 +55,15 @@ class ChatGPT {
 
     this.config = {
       model: "gpt-4-turbo-preview",
-      frequencyPenalty: 21,
+      frequencyPenalty: 0.0,
       logitBias: "",
       maxTokens: 1000,
-      presencePenalty: 21,
+      presencePenalty: 0.0,
       responseFormat: '{"type":"text"}',
       seed: 0,
       stop: "",
-      temperature: 10,
-      topP: 101,
+      temperature: 0.7,
+      topP: 1,
       tools: "",
       toolChoice: "none",
       user: "",
@@ -147,27 +147,33 @@ class ChatGPT {
   // @param response The response from the oracle
   // @param errorMessage Any error message
   @call({})
-  onOracleOpenAiLlmResponse(
-    runId: number,
-    response: openAIResponse,
-    errorMessage: string
-  ): void {
+  onOracleOpenAiLlmResponse({
+    runId,
+    response,
+    errorMessage,
+  }: {
+    runId: number;
+    response: openAIResponse;
+    errorMessage: string;
+  }): void {
     this.onlyOracle();
     const run = this.chatRuns.get(runId.toString());
     assert(run, "Chat run not found");
 
     if (run.messages[run.messagesCount - 1].role !== "user") {
-      throw new Error("No message to respond to");
+      near.log("No user message to respond to");
     }
 
     if (errorMessage !== "") {
       const newMessage = this.createTextMessage("assistant", errorMessage);
       run.messages.push(newMessage);
       run.messagesCount++;
+      this.chatRuns.set(runId.toString(), run);
     } else {
       const newMessage = this.createTextMessage("assistant", response.content);
       run.messages.push(newMessage);
       run.messagesCount++;
+      this.chatRuns.set(runId.toString(), run);
     }
   }
 

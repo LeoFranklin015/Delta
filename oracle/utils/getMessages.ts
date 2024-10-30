@@ -15,6 +15,7 @@ export const getMessages = async (chatId: number, callbackAddress: string) => {
     });
     console.log(res);
   } catch (e) {
+    console.log(e);
     throw new Error(`error signing ${JSON.stringify(e)}`);
   }
 
@@ -22,11 +23,22 @@ export const getMessages = async (chatId: number, callbackAddress: string) => {
   if ("SuccessValue" in (res.status as any)) {
     const successValue = (res.status as any).SuccessValue;
     const decodedValue = Buffer.from(successValue, "base64").toString();
+    const parsedMessages = JSON.parse(decodedValue);
 
-    return {
-      decodedValue,
-    };
+    console.log(Array.isArray(JSON.parse(decodedValue)));
+    let openAIReqMessages: { role: any; content: any }[] = [];
+    for (let i = 0; i < parsedMessages.length; i++) {
+      const messages = {
+        role: parsedMessages[i].role,
+        content: parsedMessages[i].content[0].value.message,
+      };
+      openAIReqMessages.push(messages);
+    }
+    console.log(openAIReqMessages);
+    return openAIReqMessages;
   } else {
     throw new Error(`error signing ${JSON.stringify(res)}`);
   }
 };
+
+// getMessages(44, "consumer1234.testnet");

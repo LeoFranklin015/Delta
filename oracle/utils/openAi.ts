@@ -4,11 +4,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-export async function callOpenAI(messgae: any, config: any): Promise<string> {
-  const decodedValue = formatDecodedMessages(messgae);
-  const messages = formattedMessages(decodedValue);
-  console.log(decodedValue);
-  console.log(messages);
+export async function callOpenAI(message: any[], config: any): Promise<any> {
   try {
     // Initial call to OpenAI using Axios
     const initialResponse = await axios.post(
@@ -16,10 +12,8 @@ export async function callOpenAI(messgae: any, config: any): Promise<string> {
       {
         model: "gpt-3.5-turbo",
 
-        messages: messages,
+        messages: message,
         max_tokens: 150,
-        tools: [],
-        tool_choice: "",
       },
       {
         headers: {
@@ -28,31 +22,41 @@ export async function callOpenAI(messgae: any, config: any): Promise<string> {
         },
       }
     );
+    console.log(JSON.stringify(initialResponse.data));
 
-    const initialMessage = initialResponse.data.choices[0].message;
-    console.log(initialMessage.content);
-    return initialMessage.content || "No response generated.";
+    const response = {
+      id: initialResponse.data.id,
+      content: initialResponse.data.choices[0].message.content,
+      functionName:
+        (initialResponse.data.choices[0].message.tool_calls &&
+          initialResponse.data.choices[0].message.tool_calls[0].function
+            .name) ||
+        "",
+      functionArguments:
+        (initialResponse.data.choices[0].message.tool_calls &&
+          initialResponse.data.choices[0].message.tool_calls[0].function
+            .arguments) ||
+        "",
+      created: initialResponse.data.created,
+      model: initialResponse.data.model,
+      systemFingerprint: initialResponse.data.systemFingerprint,
+
+      object: initialResponse.data.object,
+
+      completionTokens: initialResponse.data.usage.completionTokens,
+      promptTokens: initialResponse.data.usage.promptTokens,
+      totalTokens: initialResponse.data.usage.totalTokens,
+    };
+    const error = "";
+    return {
+      response,
+      error,
+    };
   } catch (error) {
     console.error("Error calling OpenAI API:", error);
-    return "An error occurred while processing your request.";
-  }
-}
-
-const formattedMessages = (messages: any) => {
-  return messages.map((message: any) => ({
-    role: message.role,
-    content: message.content.value.message,
-  }));
-};
-
-function formatDecodedMessages(decodedValue : any) {
-  let parsedMessages;
-
-  // Parse the JSON string into an array
-  try {
-    parsedMessages = JSON.parse(decodedValue);
-  } catch (error) {
-    console.error("Invalid JSON format:", error);
-    return [];
+    return {
+      response: "",
+      error,
+    };
   }
 }

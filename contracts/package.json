@@ -18,8 +18,9 @@
     
     "start-chat": "near call consumer1234.testnet startChat '{\"message\": \"whats your name\"}' --accountId consumer1234.testnet --gas 300000000000000",
     
-    "get-messages": "near call consumer1234.testnet getMessageHistory '{\"chatId\": 0}' --accountId consumer1234.testnet",
-        "test": "$npm_execpath run build && ava -- ./build/oracle.wasm"
+    "get-messages": "near call consumer1234.testnet getMessageHistory '{\"chatId\": 92}' --accountId consumer1234.testnet",
+    "get-run": "near call consumer1234.testnet getChatRuns '{\"chatId\": 94}' --accountId consumer1234.testnet",    
+    "test": "$npm_execpath run build && ava -- ./build/oracle.wasm"
   },
   "dependencies": {
     "near-sdk-js": "2.0.0"

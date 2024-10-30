@@ -1,10 +1,12 @@
-import zmq from "zeromq";
-import { log } from "single-line-log";
+const zmq = require("zeromq");
+const log = require("single-line-log").stdout;
 import colors from "colors";
-import "dotenv/config";
+import dotenv from "dotenv";
 import WebSocket from "ws";
 
-const isMainnet = process.env.NETWORK === "mainnet";
+dotenv.config();
+
+const isMainnet = false;
 
 const nearIndexerWS = isMainnet
   ? "wss://ws-events.intear.tech/events-mainnet/log_text"
@@ -15,24 +17,29 @@ const ws = new WebSocket(nearIndexerWS);
 
 (async () => {
   await theseus.bind(
-    `tcp://${process.env.ZMQ_SERVER || "0.0.0.0"}:${
-      process.env.ZMQ_TOKENS_PORT || "7779"
+    `tcp://${process.env.RPC_HOST || "0.0.0.0"}:${
+      process.env.THESUS_PORT || "7779"
     }`
   );
   console.log(
     colors.green(
-      `\nServer is ready on ${process.env.ZMQ_SERVER}:${process.env.ZMQ_TOKENS_PORT}`
+      `\nServer is ready on ${process.env.RPC_HOST}:${process.env.THESUS_PORT}`
     )
   );
 
   ws.on("open", () => {
-    log(
-      colors.green(
-        "Listening for events on the " + isMainnet ? "mainnet" : "testnet"
-      )
-    );
+    // console.log(
+    //   colors.green(
+    //     // "\nListening for events on the " + isMainnet ? "mainnet" : "testnet"
+    //   )
+    // );
     // TODO: Configure the oracle account id
-    ws.send(JSON.stringify({ account_id: "oracletest1.testnet" }));
+    const message = JSON.stringify({ account_id: "oracletest1.testnet" });
+
+    console.log("WebSocket connection established");
+    console.log("Sending message:", message);
+    ws.send(message);
+    // ws.send(JSON.stringify({ account_id: "oracletest1.testnet" }));
   });
 
   ws.on("message", async (data) => {
@@ -50,6 +57,7 @@ const ws = new WebSocket(nearIndexerWS);
       let msg: string = msgBytes.toString();
 
       if (msg === "ready" || msg === "done") {
+        console.log(colors.magenta("Received data:" + dataToBeProcessed.data));
         theseus.send(dataToBeProcessed);
       }
     }

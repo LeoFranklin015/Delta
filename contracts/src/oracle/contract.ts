@@ -8,6 +8,7 @@ import {
   LookupMap,
   assert,
   NearPromise,
+  PromiseIndex,
 } from "near-sdk-js";
 import { AccountId } from "near-sdk-js";
 import { IOracle, openAIRequest, openAIResponse } from "../interfaces/IOracle";
@@ -77,9 +78,6 @@ class Oracle implements IOracle {
     promptCallbackID: number;
     config: openAIRequest;
   }): number {
-    near.log(promptCallbackID);
-
-    near.log(config);
     const promptId = this.promptsCount;
     this.callbackAddresses.set(
       promptId.toString(),
@@ -115,26 +113,36 @@ class Oracle implements IOracle {
     promptCallbackID: number;
     response: openAIResponse;
     error: string;
-  }): void {
+  }): NearPromise {
     // this.onlyWhitelisted();
-    this.promptAlreadyProcessed(promptId);
+    // this.promptAlreadyProcessed(promptId);
     this.isPromptProcessed.set(promptId.toString(), true);
 
     const callbackAddress = this.callbackAddresses.get(promptId.toString());
     assert(callbackAddress != null, "Callback address not found");
-    const promise = NearPromise.new(callbackAddress).functionCall(
-      "onOracleOpenAiLlmResponse",
-      JSON.stringify({
-        promptCallbackId: promptCallbackID,
-        response: response,
-        errorMessage: error,
-      }),
-      BigInt(0),
-      THIRTY_TGAS
-    );
+
+    const promise = NearPromise.new(callbackAddress)
+      .functionCall(
+        "onOracleOpenAiLlmResponse",
+        JSON.stringify({
+          runId: promptCallbackID,
+          response: response,
+          errorMessage: error,
+        }),
+        BigInt(0),
+        THIRTY_TGAS
+      )
+      .then(
+        NearPromise.new(near.currentAccountId()).functionCall(
+          "addOpenAiResponse_callback",
+          JSON.stringify({}),
+          BigInt(0),
+          THIRTY_TGAS
+        )
+      );
     near.log(
       JSON.stringify({
-        type: "createOpenAiLlmCall",
+        type: "onOracleOpenAiLlmResponse",
         data: {
           promptId: promptId,
           promptCallbackID: promptCallbackID,
@@ -143,6 +151,30 @@ class Oracle implements IOracle {
         },
       })
     );
+
+    return promise.asReturn();
+  }
+
+  @call({ privateFunction: true })
+  addOpenAiResponse_callback(): any {
+    let { result, success } = promiseResult();
+
+    if (success) {
+      near.log(
+        JSON.stringify({
+          message: "Successfully added the response to consumer",
+        })
+      );
+      return result;
+    } else {
+      near.log(
+        JSON.stringify({
+          message: "Failed adding the response to consumer",
+        })
+      );
+
+      return "";
+    }
   }
 
   @view({})
@@ -214,4 +246,18 @@ class Oracle implements IOracle {
   getIsPromptProcessed(promptId: string): boolean | null {
     return this.isPromptProcessed.get(promptId);
   }
+}
+
+function promiseResult(): { result: string; success: boolean } {
+  let result, success;
+
+  try {
+    result = near.promiseResult(0 as PromiseIndex);
+    success = true;
+  } catch {
+    result = undefined;
+    success = false;
+  }
+
+  return { result, success };
 }
