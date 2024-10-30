@@ -7,26 +7,32 @@
     "build-oracle": "near-sdk-js build src/oracle/contract.ts build/oracle.wasm",
     "build-consumer": "near-sdk-js build src/contract.ts build/consumer.wasm",
     "build-function": "near-sdk-js build src/functionCallContract/contract.ts build/function.wasm",
+    "build-agent": "near-sdk-js build src/AgentContract.ts build/agent.wasm",
 
 
     "create-oracle-account": "near create-account oracletest2.testnet --useFaucet",
     "create-consumer-account": "near create-account consumer12345.testnet --useFaucet",
     "create-function-account": "near create-account functioncall2.testnet --useFaucet",
+    "create-agent-account": "near create-account agent12.testnet --useFaucet",
 
     "deploy-oracle": "near deploy oracletest2.testnet ./build/oracle.wasm",
     "deploy-consumer": "near deploy consumer12345.testnet ./build/consumer.wasm",
     "deploy-function": "near deploy functioncall2.testnet ./build/function.wasm",
+    "deploy-agent": "near deploy agent12.testnet ./build/agent.wasm",
 
     "init-consumer": "near call oracletest2.testnet init '{}' --accountId consumer12345.testnet",
     "init-oracle": "near call oracletest2.testnet init '{}' --accountId oracletest2.testnet",
     "init-function": "near call oracletest2.testnet init '{}' --accountId functioncall2.testnet",
+    "init-agent": "near call oracletest2.testnet init '{\"initialOracleAddress\": \"oracletest2.testnet\", \"initialPrompt\": \"You are a agent who can access Web . Do task iteratively and produce result\"}' --accountId agent12.testnet",
     
     "start-chat": "near call consumer12345.testnet startChat '{\"message\": \"whats your name\"}' --accountId consumer12345.testnet --gas 300000000000000",
     "start-function-chat" : "near call functioncall2.testnet startChat '{\"message\": \"Get me the current news about US election\"}' --accountId functioncall2.testnet --gas 300000000000000",
+    "start-agent-chat": "near call agent12.testnet runAgent '{\"query\": \"Get me the current news about US election\", \"maxIterations\": 2}' --accountId agent12.testnet --gas 300000000000000",
     
     "get-messages": "near call consumer12345.testnet getMessageHistory '{\"chatId\": 92}' --accountId consumer12345.testnet",
     "get-run": "near call consumer12345.testnet getChatRuns '{\"chatId\": 94}' --accountId consumer12345.testnet",   
     "get-function-messages": "near call functioncall2.testnet getChatRuns '{\"chatId\":  13}' --accountId functioncall2.testnet",
+    "get-agent-messages" : "near call agent12.testnet getMessageHistory '{\"chatId\": 10}' --accountId agent12.testnet",
     "test": "$npm_execpath run build && ava -- ./build/oracle.wasm"
   },
   "dependencies": {

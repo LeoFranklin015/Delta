@@ -7,6 +7,7 @@ import {
   assert,
   NearPromise,
   PromiseIndex,
+  initialize,
 } from "near-sdk-js";
 import { AccountId } from "near-sdk-js";
 import {
@@ -48,24 +49,56 @@ class Agent {
 
   constructor(initialOracleAddress: AccountId, initialPrompt: string) {
     this.owner = near.predecessorAccountId();
-    this.oracleAddress = initialOracleAddress;
-    this.prompt = initialPrompt;
+    this.oracleAddress = "oracletest2.testnet";
+    this.prompt =
+      "You are a agent who can access Web . Do task iteratively and produce result";
 
     this.config = {
-      model: "gpt-4-turbo-preview",
-      frequencyPenalty: 21, // > 20 for null
-      logitBias: "", // empty str for null
-      maxTokens: 1000, // 0 for null
-      presencePenalty: 21, // > 20 for null
+      model: "gpt-3.5-turbo",
+      frequencyPenalty: 0.0,
+      logitBias: "",
+      maxTokens: 1000,
+      presencePenalty: 0.0,
       responseFormat: '{"type":"text"}',
-      seed: 0, // null
-      stop: "", // null
-      temperature: 10, // Example temperature (scaled up, 10 means 1.0), > 20 means null
-      topP: 101, // Percentage 0-100, > 100 means null
+      seed: 0,
+      stop: "",
+      temperature: 0.7,
+      topP: 1,
       tools:
-        '[{"type":"function","function":{"name":"web_search","description":"Search the internet","parameters":{"type":"object","properties":{"query":{"type":"string","description":"Search query"}},"required":["query"]}}},{"type":"function","function":{"name":"image_generation","description":"Generates an image using Dalle-2","parameters":{"type":"object","properties":{"prompt":{"type":"string","description":"Dalle-2 prompt to generate an image"}},"required":["prompt"]}}}]',
-      toolChoice: "auto", // "none" or "auto"
-      user: "", // null
+        '[{"type":"function","function":{"name":"websearch","description":"Search the web for current information","parameters":{"type":"object","properties":{"query":{"type":"string","description":"The search query"}},"required":["query"]}}}]',
+      toolChoice: "auto",
+      user: "",
+    };
+  }
+
+  @initialize({})
+  init({
+    initialOracleAddress,
+    initialPrompt,
+  }: {
+    initialOracleAddress: AccountId;
+    initialPrompt: string;
+  }) {
+    this.owner = near.predecessorAccountId();
+    this.oracleAddress = "oracletest2.testnet";
+    this.prompt =
+      "You are a agent who can access Web . Do task iteratively and produce result";
+
+    this.config = {
+      model: "gpt-3.5-turbo",
+      frequencyPenalty: 0.0,
+      logitBias: "",
+      maxTokens: 1000,
+      presencePenalty: 0.0,
+      responseFormat: '{"type":"text"}',
+      seed: 0,
+      stop: "",
+      temperature: 0.7,
+      topP: 1,
+      tools:
+        '[{"type":"function","function":{"name":"websearch","description":"Search the web for current information","parameters":{"type":"object","properties":{"query":{"type":"string","description":"The search query"}},"required":["query"]}}}]',
+      toolChoice: "auto",
+      user: "",
     };
   }
 
@@ -90,7 +123,13 @@ class Agent {
   }
 
   @call({})
-  runAgent(query: string, maxIterations: number): NearPromise {
+  runAgent({
+    query,
+    maxIterations,
+  }: {
+    query: string;
+    maxIterations: number;
+  }): NearPromise {
     const run: AgentRun = {
       owner: near.predecessorAccountId(),
       messages: [],
@@ -114,8 +153,8 @@ class Agent {
       .functionCall(
         "createOpenAiLlmCall",
         JSON.stringify({
-          promptId: currentRunId,
-          request: this.config,
+          promptCallbackID: currentRunId,
+          config: this.config,
         }),
         BigInt(0),
         THIRTY_TGAS
@@ -135,7 +174,7 @@ class Agent {
 
   // openAiLlmCallback
   @call({})
-  openAiLlmCallback(runId: number): any {
+  openAiLlmCallback({ runId }: { runId: number }): any {
     let { result, success } = promiseResult();
 
     if (success) {
@@ -153,11 +192,15 @@ class Agent {
   // @param errorMessage Any error message
   // @dev Called by teeML oracle
   @call({})
-  onOracleOpenAiLlmResponse(
-    runId: number,
-    response: openAIResponse,
-    errorMessage: string
-  ): void {
+  onOracleOpenAiLlmResponse({
+    runId,
+    response,
+    errorMessage,
+  }: {
+    runId: number;
+    response: openAIResponse;
+    errorMessage: string;
+  }): any {
     this.onlyOracle();
     const run = this.agentRuns.get(runId.toString());
 
@@ -177,7 +220,7 @@ class Agent {
       return;
     }
 
-    if (response.content != "") {
+    if (response.content != "No Response") {
       const newMessage = this.createTextMessage("assistant", response.content);
       run.messages.push(newMessage);
       run.responseCount++;
@@ -185,16 +228,29 @@ class Agent {
     }
 
     if (response.functionName != "") {
-      NearPromise.new(this.oracleAddress).functionCall(
-        "createFunctionCall",
-        JSON.stringify({
-          functionCallbackId: runId,
-          functionType: response.functionName,
-          functionInput: response.functionArguments,
-        }),
-        BigInt(0),
-        THIRTY_TGAS
-      );
+      const promise = NearPromise.new(this.oracleAddress)
+        .functionCall(
+          "createFunctionCall",
+          JSON.stringify({
+            functionCallbackId: runId,
+            functionType: response.functionName,
+            functionInput: response.functionArguments,
+          }),
+          BigInt(0),
+          THIRTY_TGAS
+        )
+        .then(
+          NearPromise.new(near.currentAccountId()).functionCall(
+            "functionCallCallback",
+            JSON.stringify({
+              runId: runId,
+            }),
+            BigInt(0),
+            THIRTY_TGAS
+          )
+        );
+
+      return promise.asReturn();
     }
 
     run.isFinished = true;
@@ -203,7 +259,7 @@ class Agent {
 
   //FunctionCall Callback
   @call({})
-  functionCallCallback(runId: number): any {
+  functionCallCallback({ runId }: { runId: number }): any {
     let { result, success } = promiseResult();
 
     if (success) {
@@ -222,11 +278,15 @@ class Agent {
   // @dev Called by teeML oracle
 
   @call({})
-  onOracleFunctionResponse(
-    runId: number,
-    response: string,
-    errorMessage: string
-  ): void {
+  onOracleFunctionResponse({
+    runId,
+    response,
+    errorMessage,
+  }: {
+    runId: number;
+    response: string;
+    errorMessage: string;
+  }): NearPromise {
     this.onlyOracle();
     const run = this.agentRuns.get(runId.toString());
 
@@ -239,12 +299,12 @@ class Agent {
     run.messages.push(newMessage);
     run.responseCount++;
     this.agentRuns.set(runId.toString(), run);
-    NearPromise.new(this.oracleAddress)
+    const promise = NearPromise.new(this.oracleAddress)
       .functionCall(
         "createOpenAiLlmCall",
         JSON.stringify({
-          promptId: runId,
-          request: this.config,
+          promptCallbackID: runId,
+          config: this.config,
         }),
         BigInt(0),
         THIRTY_TGAS
@@ -259,6 +319,8 @@ class Agent {
           THIRTY_TGAS
         )
       );
+
+    return promise.asReturn();
   }
 
   // @notice Retrieves the message history for a given agent run
@@ -266,8 +328,9 @@ class Agent {
   // @return An array of messages
   // @dev Called by teeML oracle
 
-  public getMessageHistory(agentId: number): Message[] {
-    const run = this.agentRuns.get(agentId.toString());
+  @view({})
+  public getMessageHistory({ chatId }: { chatId: number }): Message[] {
+    const run = this.agentRuns.get(chatId.toString());
     return run.messages;
   }
 

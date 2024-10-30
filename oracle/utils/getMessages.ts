@@ -32,7 +32,8 @@ export const getMessages = async (chatId: number, callbackAddress: string) => {
         role: parsedMessages[i].role,
         content:
           parsedMessages[i].content[0].value.message ||
-          parsedMessages[i].content[0].value,
+          parsedMessages[i].content[0].value ||
+          "error",
       };
       openAIReqMessages.push(messages);
     }
