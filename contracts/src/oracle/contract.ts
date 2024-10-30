@@ -160,19 +160,8 @@ class Oracle implements IOracle {
     let { result, success } = promiseResult();
 
     if (success) {
-      near.log(
-        JSON.stringify({
-          message: "Successfully added the response to consumer",
-        })
-      );
       return result;
     } else {
-      near.log(
-        JSON.stringify({
-          message: "Failed adding the response to consumer",
-        })
-      );
-
       return "";
     }
   }
