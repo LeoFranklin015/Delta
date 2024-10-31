@@ -1,27 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Volume2, Copy, ThumbsUp, ThumbsDown, RotateCcw } from "lucide-react";
 import { Navigation } from "./navigation";
-
 import { useRouter, usePathname } from "next/navigation";
+import { NearContext } from "@/wallets/near";
+import { agentGptContract } from "@/config";
+import { io } from "socket.io-client";
 
 export function NearAgentGPT() {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
+  const [iterations, setIterations] = useState();
   const [isLogoVisible, setIsLogoVisible] = useState(true);
   const [selectedRoute, setSelectedRoute] = useState("Simple GPT");
+  const [logs, setLogs] = useState([]);
+  const [chatId, setChatId] = useState(0);
+  const [isFetch, setIsFetch] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+
   const router = useRouter();
   const currentPath = usePathname();
+  const CONTRACT = agentGptContract;
 
-  //get the url path
+  const { wallet } = useContext(NearContext);
 
   useEffect(() => {
-    console.log(currentPath);
     setSelectedRoute(
       currentPath === "/"
         ? "Simple GPT"
@@ -32,22 +41,67 @@ export function NearAgentGPT() {
   }, [currentPath]);
 
   useEffect(() => {
+    const socket = io("http://localhost:4000");
+
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket server");
+      setLogs((prevLogs) => [...prevLogs, "Connected to WebSocket server"]);
+    });
+
+    socket.on("log", async (logMessage) => {
+      const log = JSON.parse(logMessage);
+      console.log(log);
+      const message = log.type + ": " + log.id;
+      if (log.type === "createdFunctionCall") {
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          { role: "tool", content: log.functionType, isTyping: true },
+        ]);
+        setIsTyping(true);
+      }
+      if (
+        log.type === "openAiResponseAdded" ||
+        log.type === "functionResponseAdded"
+      ) {
+        setIsFetch(true);
+        if (log.type === "functionResponseAdded") {
+          setIsTyping(false);
+        }
+        if (log.type === "openAiResponseAdded") {
+        }
+      }
+      setLogs((prevLogs) => [...prevLogs, message]);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Disconnected from WebSocket server");
+      setLogs((prevLogs) => [
+        ...prevLogs,
+        "Disconnected from WebSocket server",
+      ]);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
     setIsLogoVisible(messages.length === 0);
   }, [messages]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (inputMessage.trim() !== "") {
-      setMessages([...messages, { type: "user", content: inputMessage }]);
-      // Simulating a response from the AI
-      setTimeout(() => {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            type: "ai",
-            content: `This is a simulated response from NEAR AI using ${selectedRoute}.`,
-          },
-        ]);
-      }, 1000);
+      setMessages([...messages, { role: "user", content: inputMessage }]);
+      const response = await wallet.callMethod({
+        contractId: CONTRACT,
+        method: "runAgent",
+        args: { query: inputMessage, maxIterations: iterations },
+        gas: "300000000000000",
+      });
+      console.log(response);
+      setChatId(response);
+      setLogs((prevLogs) => [...prevLogs, `Message sent to oracle`]);
       setInputMessage("");
     }
   };
@@ -56,51 +110,62 @@ export function NearAgentGPT() {
     setSelectedRoute(route);
     if (route === "Simple GPT") {
       router.push("/");
-      return;
     } else if (route === "GPT with FunctionCall") {
       router.push("/functioncall");
-      return;
     } else if (route === "Agent") {
       router.push("/agent");
-      return;
     }
   };
 
-  const logoVariants = {
-    hidden: { opacity: 0, scale: 0.5 },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      transition: {
-        duration: 0.5,
-        yoyo: Infinity,
-        ease: "easeInOut",
-      },
-    },
-  };
-
-  const messageVariants = {
-    hidden: { opacity: 0, y: 50 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  };
-
-  const buttonVariants = {
-    hover: { scale: 1.05 },
-    tap: { scale: 0.95 },
-  };
-
-  const sidebarVariants = {
-    hidden: { x: "-100%" },
-    visible: { x: 0, transition: { duration: 0.3 } },
-  };
+  useEffect(() => {
+    const fetchMessageData = async () => {
+      if (isFetch) {
+        const updatedResponse = await wallet.viewMethod({
+          contractId: CONTRACT,
+          method: "getMessageHistory",
+          args: { chatId: chatId },
+        });
+        const message = {
+          role: updatedResponse[updatedResponse.length - 1].role,
+          content: updatedResponse[updatedResponse.length - 1].content[0].value,
+        };
+        if (
+          !messages.some(
+            (msg) =>
+              msg.content === message.content && msg.role === message.role
+          )
+        ) {
+          setMessages((prevMessages) =>
+            prevMessages
+              .map((msg) =>
+                msg.role === "tool" && msg.isTyping
+                  ? { ...msg, isTyping: false }
+                  : msg
+              )
+              .concat(message)
+          );
+        }
+        setIsFetch(false);
+      }
+      if (isFetch) {
+        const check = await wallet.viewMethod({
+          contractId: CONTRACT,
+          method: "isRunFinished",
+          args: { agentId: chatId },
+        });
+        setIsCompleted(check);
+      }
+    };
+    fetchMessageData();
+  }, [isFetch]);
 
   return (
     <div className="flex h-screen bg-black text-green-400">
       <motion.div
         className="w-64 bg-gray-900 p-4 border-r border-green-400/20"
-        variants={sidebarVariants}
-        initial="hidden"
-        animate="visible"
+        initial={{ x: "-100%" }}
+        animate={{ x: 0 }}
+        transition={{ duration: 0.3 }}
       >
         <h2 className="text-xl font-bold mb-4">Examples</h2>
         {["Simple GPT", "GPT with FunctionCall", "Agent"].map((route) => (
@@ -112,9 +177,8 @@ export function NearAgentGPT() {
                 : "hover:bg-green-400/10"
             }`}
             onClick={() => handleRouteChange(route)}
-            variants={buttonVariants}
-            whileHover="hover"
-            whileTap="tap"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
             {route}
           </motion.button>
@@ -129,27 +193,21 @@ export function NearAgentGPT() {
         >
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">NEAR GPT - {selectedRoute}</h1>
-            <motion.div
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <Navigation />
-            </motion.div>
+            <Navigation />
           </div>
         </motion.header>
         <ScrollArea className="flex-grow p-4">
           <AnimatePresence>
             {isLogoVisible && (
               <motion.div
-                className="flex flex-col items-center justify-center h-full"
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
-                variants={logoVariants}
+                className="flex flex-row items-center justify-center h-full"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                transition={{ duration: 0.5 }}
               >
                 <motion.div
-                  className="w-64 h-64 mb-8"
+                  className="w-64 h-64 mr-8"
                   animate={{
                     rotate: 360,
                     transition: {
@@ -185,22 +243,29 @@ export function NearAgentGPT() {
                     />
                   </svg>
                 </motion.div>
-                <motion.h2
-                  className="text-7xl font-bold mb-4"
+                <motion.div
+                  className="flex flex-col items-center"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.5 }}
                 >
-                  NEAR.GPT
-                </motion.h2>
-                <motion.p
-                  className="text-2xl text-center max-w-2xl"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.7 }}
-                >
-                  Bringing AI on-chain with the power of NEAR Protocol
-                </motion.p>
+                  <motion.h2
+                    className="text-7xl font-bold mb-4"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.5 }}
+                  >
+                    NEAR.GPT
+                  </motion.h2>
+                  <motion.p
+                    className="text-2xl text-center max-w-2xl"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.7 }}
+                  >
+                    Bringing AI on-chain with the power of NEAR Protocol
+                  </motion.p>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -209,21 +274,50 @@ export function NearAgentGPT() {
               <motion.div
                 key={index}
                 className={`mb-4 ${
-                  message.type === "user" ? "text-right" : ""
+                  message.role === "user" ? "text-right" : ""
                 }`}
-                variants={messageVariants}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 50 }}
+                transition={{ duration: 0.5 }}
               >
                 <div
                   className={`inline-block p-3 rounded-lg ${
-                    message.type === "user" ? "bg-green-400/20" : "bg-gray-800"
+                    message.role === "user"
+                      ? "bg-green-400/20"
+                      : message.role === "assistant"
+                      ? "bg-gray-800"
+                      : message.role === "tool"
+                      ? "bg-blue-400/40"
+                      : "bg-green-400/40"
                   } max-w-[80%]`}
                 >
-                  {message.content}
+                  {message.role === "tool" && message.isTyping ? (
+                    <motion.div
+                      className="flex space-x-1"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <span>{message.content}</span>
+                      <motion.span
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{
+                          duration: 0.5,
+                          repeat: Infinity,
+                          repeatType: "reverse",
+                        }}
+                      >
+                        ...
+                      </motion.span>
+                    </motion.div>
+                  ) : (
+                    message.content
+                  )}
                 </div>
-                {message.type === "ai" && (
+
+                {message.role === "assistant" && (
                   <motion.div
                     className="flex items-center mt-2 space-x-2"
                     initial={{ opacity: 0 }}
@@ -231,61 +325,79 @@ export function NearAgentGPT() {
                     transition={{ delay: 0.3 }}
                   >
                     {[Volume2, Copy, ThumbsUp, ThumbsDown, RotateCcw].map(
-                      (Icon, i) => (
-                        <motion.div
-                          key={i}
-                          variants={buttonVariants}
-                          whileHover="hover"
-                          whileTap="tap"
+                      (Icon, iconIndex) => (
+                        <Button
+                          key={iconIndex}
+                          variant="ghost"
+                          size="icon"
+                          className="text-green-400/80 hover:text-green-400"
                         >
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="w-8 h-8 rounded-full"
-                          >
-                            <Icon className="w-4 h-4" />
-                          </Button>
-                        </motion.div>
+                          <Icon className="w-4 h-4" />
+                        </Button>
                       )
                     )}
                   </motion.div>
                 )}
               </motion.div>
             ))}
+
+            {isCompleted && (
+              <motion.div
+                className="flex items-center mt-2 space-x-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{
+                    duration: 0.5,
+                    repeat: Infinity,
+                    repeatType: "reverse",
+                  }}
+                >
+                  Agent Task Completed
+                </motion.span>
+              </motion.div>
+            )}
           </AnimatePresence>
         </ScrollArea>
-        <motion.div
-          className="p-4 border-t border-green-400/20"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="flex space-x-2">
-            <Input
-              type="text"
-              placeholder="Message NEAR GPT..."
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-              className="flex-grow bg-gray-800 text-green-400 border-green-400/20 focus:border-green-400 placeholder-green-400/50"
-            />
-            <motion.div
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <Button
-                onClick={handleSendMessage}
-                className="bg-green-400 hover:bg-green-500 text-black"
+        <div className="border-t border-green-400/20 p-4 flex items-center">
+          <Input
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            placeholder="Type your message..."
+            className="flex-grow mr-4"
+          />
+          <Input
+            value={iterations}
+            type="number"
+            onChange={(e) => setIterations(e.target.value)}
+            placeholder="Number of Iterations"
+            className="w-1/4 mr-4"
+          />
+          <Button onClick={handleSendMessage} variant="outline">
+            Send
+          </Button>
+        </div>
+        <ScrollArea className="border-t border-green-400/20 p-4 h-[20%]">
+          <h3 className="text-xl font-bold mb-2">Logs</h3>
+          <AnimatePresence>
+            {logs.map((log, index) => (
+              <motion.div
+                key={index}
+                className="p-2 text-sm text-green-400"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.5 }}
               >
-                Send
-              </Button>
-            </motion.div>
-          </div>
-          <p className="text-xs text-center mt-2 text-green-400/50">
-            NEAR GPT can make mistakes. Consider checking important information.
-          </p>
-        </motion.div>
+                {log}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </ScrollArea>
       </div>
     </div>
   );

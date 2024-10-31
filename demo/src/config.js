@@ -25,3 +25,4 @@ export const EVMWalletChain = evmWalletChains[NetworkId];
 
 export const simpleGptContract = "simplegpttest.testnet";
 export const functionGptContract = "functioncalltest1.testnet";
+export const agentGptContract = "agentstaging.testnet";

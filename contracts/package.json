@@ -13,26 +13,28 @@
     "create-oracle-account": "near create-account oracletest2.testnet --useFaucet",
     "create-consumer-account": "near create-account simplegpttest.testnet --useFaucet",
     "create-function-account": "near create-account functioncalltest1.testnet --useFaucet",
-    "create-agent-account": "near create-account agent12.testnet --useFaucet",
+    "create-agent-account": "near create-account agentstaging.testnet --useFaucet",
 
     "deploy-oracle": "near deploy oracletest2.testnet ./build/oracle.wasm",
     "deploy-consumer": "near deploy simplegpttest.testnet ./build/consumer.wasm",
     "deploy-function": "near deploy functioncalltest1.testnet ./build/function.wasm --initFunction \"init\" --initArgs '{\"oracleAddress\":\"oracletest2.testnet\"}'",
-    "deploy-agent": "near deploy agent12.testnet ./build/agent.wasm",
+    "deploy-agent": "near deploy agentstaging.testnet ./build/agent.wasm",
+    "deployInit-agent": "near deploy agentstaging.testnet ./build/agent.wasm --initFunction \"init\" --initArgs '{\"initialOracleAddress\":\"oracletest2.testnet\", \"initialPrompt\":\"You are a agent who can access Web . Do task iteratively and produce result\"}'",
+
 
     "init-consumer": "near call oracletest2.testnet init '{\"oracleAddress\": \"oracletest2.testnet\"}' --accountId simplegpttest.testnet",
     "init-oracle": "near call oracletest2.testnet init '{}' --accountId oracletest2.testnet",
     "init-function": "near call oracletest2.testnet init '{}' --accountId functioncalltest1.testnet",
-    "init-agent": "near call oracletest2.testnet init '{\"initialOracleAddress\": \"oracletest2.testnet\", \"initialPrompt\": \"You are a agent who can access Web . Do task iteratively and produce result\"}' --accountId agent12.testnet",
+    "init-agent": "near call oracletest2.testnet init '{\"initialOracleAddress\": \"oracletest2.testnet\", \"initialPrompt\": \"You are a agent who can access Web . Do task iteratively and produce result\"}' --accountId agentstaging.testnet",
     
     "start-chat": "near call simplegpttest.testnet startChat '{\"message\": \"whats your name\"}' --accountId simplegpttest.testnet --gas 300000000000000",
     "start-function-chat" : "near call functioncalltest1.testnet startChat '{\"message\": \"Get me the current news about US election\"}' --accountId functioncalltest1.testnet --gas 300000000000000",
-    "start-agent-chat": "near call agent12.testnet runAgent '{\"query\": \"Get me the current news about US election\", \"maxIterations\": 2}' --accountId agent12.testnet --gas 300000000000000",
+    "start-agent-chat": "near call agentstaging.testnet runAgent '{\"query\": \"Get me the current news about US election\", \"maxIterations\": 2}' --accountId agentstaging.testnet --gas 300000000000000",
     
     "get-messages": "near call simplegpttest.testnet getMessageHistory '{\"chatId\": 41}' --accountId simplegpttest.testnet",
     "get-run": "near call simplegpttest.testnet getChatRuns '{\"chatId\": 94}' --accountId simplegpttest.testnet",   
-    "get-function-messages": "near call functioncalltest1.testnet getChatRuns '{\"chatId\":  14}' --accountId functioncalltest1.testnet",
-    "get-agent-messages" : "near call agent12.testnet getMessageHistory '{\"chatId\": 14}' --accountId agent12.testnet",
+    "get-function-messages": "near call functioncalltest1.testnet getChatRuns '{\"chatId\":  15}' --accountId functioncalltest1.testnet",
+    "get-agent-messages" : "near view agentstaging.testnet isRunFinished '{\"agentId\": 0}' ",
     "test": "$npm_execpath run build && ava -- ./build/oracle.wasm"
   },
   "dependencies": {

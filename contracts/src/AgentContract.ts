@@ -168,7 +168,7 @@ class Agent implements IAgent {
 
     if (success) {
       near.log("Promise succeeded for runId: " + runId.toString());
-      return result;
+      return runId;
     } else {
       near.log("Promise failed...");
       return "";
