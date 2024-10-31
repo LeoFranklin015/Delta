@@ -11,6 +11,24 @@ Theseus AI serves as a decentralized AI oracle designed to empower developers by
 
 Here is a detailed documentation to integrate Theseus AI Oracle into your Near SmartContract. [Documentation](https://hackventures.gitbook.io/theseus)
 
+## Demo 
+
+**Simple GPT**
+- Code : https://github.com/fabianferno/theseus/blob/main/contracts/src/contract.ts
+- How it works : 
+- Demo : https://www.youtube.com/watch?v=WUWF7hHgMrY&list=PLfq8rqFOFl_Wa7biY1bWMmfkY2d1BYjpv&index=1
+
+**FunctionCall in OpenAi**
+- Code : https://github.com/fabianferno/theseus/blob/main/contracts/src/functionCallContract/contract.ts
+- How it works : https://www.youtube.com/watch?v=1pWa8z0yzMo&list=PLfq8rqFOFl_Wa7biY1bWMmfkY2d1BYjpv&index=3
+- Demo : https://www.youtube.com/watch?v=009iPUffcWM&list=PLfq8rqFOFl_Wa7biY1bWMmfkY2d1BYjpv&index=2
+
+**Agent**
+- Code : https://github.com/fabianferno/theseus/blob/main/contracts/src/AgentContract/AgentContract.ts
+- How it works : 
+- Demo : 
+
+
 ## Inspiration
 
 At the intersection of AI and crypto lies untapped potential. Many web3 products envision on-chain AI as the future, bringing transparency, provability, and decentralization to AI interactions. Theseus AI addresses the limitations of existing oracle solutions by enabling verifiable and decentralized AI computation on-chain.
