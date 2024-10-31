@@ -1,0 +1,20 @@
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+
+  // Handle incoming messages
+  socket.on('message', (data) => {
+    console.log('message received:', data);
+    // Update the UI with the new message
+  });
+
+  // Send a message when the form is submitted
+  const form = document.querySelector('form');
+  const input = document.querySelector('input');
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const message = input.value;
+    socket.emit('message', message);
+    input.value = '';
+  });
+</script>
