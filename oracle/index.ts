@@ -1,7 +1,4 @@
 import WebSocket from "ws";
-
-import { getOpenAIResponse } from "./Openapi";
-import { callback } from "./nearCall";
 import { getMessages } from "./utils/getMessages";
 import { callOpenAI } from "./utils/openAi";
 import { sendResponseToOracle } from "./utils/sendResponseOracle";
@@ -39,68 +36,10 @@ loggerService.on("connection", (socket) => {
   });
 });
 
-app.get("/", (req, res) => {
-  res.send(`<!DOCTYPE html>
-<html>
-<head>
-    <title>Logger Client</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 p-6 min-h-screen">
-    <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
-        <div id="messages-container" class="h-[400px] overflow-y-auto mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
-        </div>
-
-        <form class="flex gap-2">
-            <input type="text" 
-                   placeholder="Type your message..." 
-                   class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <button type="submit" 
-                    class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                Send
-            </button>
-        </form>
-    </div>
-
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
-        const messagesContainer = document.getElementById('messages-container');
-
-        // Handle incoming messages
-        socket.on('message', (data) => {
-            console.log('message received:', data);
-            // Create a new message element
-            const messageElement = document.createElement('div');
-            messageElement.textContent = data;
-            messageElement.className = 'p-3 mb-2 bg-white rounded-lg shadow-sm border border-gray-200';
-            
-            // Add the message to the container
-            messagesContainer.appendChild(messageElement);
-            
-            // Auto-scroll to the bottom
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        });
-
-        // Send a message when the form is submitted
-        const form = document.querySelector('form');
-        const input = document.querySelector('input');
-        form.addEventListener('submit', (event) => {
-            event.preventDefault();
-            const message = input.value;
-            socket.emit('message', message);
-            input.value = '';
-        });
-    </script>
-</body>
-</html>`);
-});
 // Start the server
-// server.listen(4000, () => {
-//   console.log("listening on PORT 4000");
-// });
+server.listen(4000, () => {
+  console.log("listening on PORT 4000");
+});
 
 function realtimeLogger(message: string) {
   loggerService.emit("log", message);
