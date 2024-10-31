@@ -26,7 +26,7 @@ Here is a detailed documentation to integrate Theseus AI Oracle into your Near S
 **Agent**
 - Code : https://github.com/fabianferno/theseus/blob/main/contracts/src/AgentContract/AgentContract.ts
 - How it works : 
-- Demo : 
+- Demo : https://youtu.be/GIjAdkXC2DU
 
 
 ## Inspiration
