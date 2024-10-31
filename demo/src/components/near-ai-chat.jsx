@@ -6,13 +6,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Volume2, Copy, ThumbsUp, ThumbsDown, RotateCcw } from "lucide-react";
-import { ConenctWallet, Navigation } from "./navigation";
+import { Navigation } from "./navigation";
+
+import { useRouter, usePathname } from "next/navigation";
 
 export function NearAiChat() {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLogoVisible, setIsLogoVisible] = useState(true);
   const [selectedRoute, setSelectedRoute] = useState("Simple GPT");
+  const router = useRouter();
+  const currentPath = usePathname();
+
+  //get the url path
+
+  useEffect(() => {
+    console.log(currentPath);
+    setSelectedRoute(
+      currentPath === "/"
+        ? "Simple GPT"
+        : currentPath === "/functioncall"
+        ? "GPT with FunctionCall"
+        : "Agent"
+    );
+  }, [currentPath]);
 
   useEffect(() => {
     setIsLogoVisible(messages.length === 0);
@@ -32,6 +49,20 @@ export function NearAiChat() {
         ]);
       }, 1000);
       setInputMessage("");
+    }
+  };
+
+  const handleRouteChange = (route) => {
+    setSelectedRoute(route);
+    if (route === "Simple GPT") {
+      router.push("/");
+      return;
+    } else if (route === "GPT with FunctionCall") {
+      router.push("/functioncall");
+      return;
+    } else if (route === "Agent") {
+      router.push("/agent");
+      return;
     }
   };
 
@@ -80,7 +111,7 @@ export function NearAiChat() {
                 ? "bg-green-400/20"
                 : "hover:bg-green-400/10"
             }`}
-            onClick={() => setSelectedRoute(route)}
+            onClick={() => handleRouteChange(route)}
             variants={buttonVariants}
             whileHover="hover"
             whileTap="tap"
