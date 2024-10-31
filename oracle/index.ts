@@ -9,7 +9,8 @@ import { sendFunctionResponse } from "./utils/sendFunctionResponse";
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 const socketUrl = "wss://ws-events.intear.tech/events-testnet/log_text";
 const message = JSON.stringify({ account_id: "oracletest2.testnet" });
 
@@ -35,6 +36,11 @@ loggerService.on("connection", (socket) => {
   });
 });
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+app.get("/", (req, res) => {
+  res.sendFile(join(__dirname, "logger/client.html"));
+});
 // Start the server
 server.listen(3000, () => {
   console.log("listening on PORT 3000");
