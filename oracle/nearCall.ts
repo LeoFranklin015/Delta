@@ -1,14 +1,22 @@
 import * as nearAPI from "near-api-js";
+import dotenv from "dotenv";
 const { Near, Account, keyStores, KeyPair } = nearAPI;
-import BN from "bn.js";
+dotenv.config();
 
 const accountId = "leofrank.testnet";
-const privateKey =
-  "ed25519:4yKBpeBnmdhF1B3j8npb7kS3g4ES9WkQAz7zsR8vLCPtmg7ajCkHpDijPPmnug3v3c24tSmHrDGczVTjrQkBsUcr";
+const privateKey = process.env.PRIVATE_KEY;
+if (!privateKey) {
+  throw new Error("PRIVATE_KEY is not defined in the environment variables");
+}
+
 const contractId = "leorocks.testnet";
 
 const keyStore = new keyStores.InMemoryKeyStore();
-keyStore.setKey("testnet", accountId, KeyPair.fromString(privateKey));
+keyStore.setKey(
+  "testnet",
+  accountId,
+  KeyPair.fromString(privateKey as nearAPI.utils.KeyPairString)
+);
 
 console.log("Near Chain Signature (NCS) call details:");
 console.log("Near accountId", accountId);

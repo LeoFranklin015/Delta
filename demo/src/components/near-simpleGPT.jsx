@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,14 +9,23 @@ import { Volume2, Copy, ThumbsUp, ThumbsDown, RotateCcw } from "lucide-react";
 import { Navigation } from "./navigation";
 
 import { useRouter, usePathname } from "next/navigation";
+import { NearContext } from "@/wallets/near";
+import { simpleGptContract } from "@/config";
 
-export function NearAiChat() {
+import { getMessages } from "@/lib/getMessage";
+
+export function NearSimpleGpt() {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLogoVisible, setIsLogoVisible] = useState(true);
   const [selectedRoute, setSelectedRoute] = useState("Simple GPT");
+
   const router = useRouter();
   const currentPath = usePathname();
+  const CONTRACT = simpleGptContract;
+
+  //Wallet
+  const { signedAccountId, wallet } = useContext(NearContext);
 
   //get the url path
 
@@ -35,20 +44,50 @@ export function NearAiChat() {
     setIsLogoVisible(messages.length === 0);
   }, [messages]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (inputMessage.trim() !== "") {
-      setMessages([...messages, { type: "user", content: inputMessage }]);
-      // Simulating a response from the AI
-      setTimeout(() => {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            type: "ai",
-            content: `This is a simulated response from NEAR AI using ${selectedRoute}.`,
-          },
-        ]);
-      }, 1000);
-      setInputMessage("");
+      setMessages([...messages, { role: "user", content: inputMessage }]);
+      const response = await wallet.callMethod({
+        contractId: CONTRACT,
+        method: "startChat",
+        args: { message: inputMessage },
+        gas: "300000000000000",
+      });
+      console.log(response);
+      const callbackResponse = await wallet.viewMethod({
+        contractId: CONTRACT,
+        method: "getMessageHistory",
+        args: { chatId: response },
+      });
+      console.log(callbackResponse);
+
+      let isFound = false;
+      const pollInterval = setInterval(async () => {
+        if (isFound) {
+          clearInterval(pollInterval);
+          return;
+        }
+        const updatedResponse = await wallet.viewMethod({
+          contractId: CONTRACT,
+          method: "getMessageHistory",
+          args: { chatId: response },
+        });
+        if (
+          updatedResponse &&
+          updatedResponse.length > callbackResponse.length
+        ) {
+          console.log(updatedResponse.length, callbackResponse.length);
+          const message = {
+            role: updatedResponse[updatedResponse.length - 1].role,
+            content:
+              updatedResponse[updatedResponse.length - 1].content[0].value,
+          };
+          setMessages((prevmessages) => [...prevmessages, message]);
+          isFound = true;
+        }
+
+        console.log(updatedResponse);
+      }, 5000);
     }
   };
 
@@ -209,7 +248,7 @@ export function NearAiChat() {
               <motion.div
                 key={index}
                 className={`mb-4 ${
-                  message.type === "user" ? "text-right" : ""
+                  message.role === "user" ? "text-right" : ""
                 }`}
                 variants={messageVariants}
                 initial="hidden"
@@ -218,12 +257,12 @@ export function NearAiChat() {
               >
                 <div
                   className={`inline-block p-3 rounded-lg ${
-                    message.type === "user" ? "bg-green-400/20" : "bg-gray-800"
+                    message.role === "user" ? "bg-green-400/20" : "bg-gray-800"
                   } max-w-[80%]`}
                 >
                   {message.content}
                 </div>
-                {message.type === "ai" && (
+                {message.role === "assistant" && (
                   <motion.div
                     className="flex items-center mt-2 space-x-2"
                     initial={{ opacity: 0 }}

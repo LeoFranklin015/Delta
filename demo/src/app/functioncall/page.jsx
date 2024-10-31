@@ -1,5 +1,5 @@
-import { NearAiChat } from "@/components/near-ai-chat";
+import { NearFunctionGpt } from "@/components/near-functionGpt";
 
 export default function page() {
-  return <NearAiChat />;
+  return <NearFunctionGpt />;
 }
