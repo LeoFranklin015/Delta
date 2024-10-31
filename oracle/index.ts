@@ -1,4 +1,5 @@
-import WebSocket from "ws";
+// import WebSocket from "ws";
+const { WebSocket } = require("ws");
 import { getOpenAIResponse } from "./Openapi";
 import { callback } from "./nearCall";
 import { getMessages } from "./utils/getMessages";
