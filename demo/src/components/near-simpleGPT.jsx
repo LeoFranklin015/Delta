@@ -20,6 +20,8 @@ export function NearSimpleGpt() {
   const [isLogoVisible, setIsLogoVisible] = useState(true);
   const [selectedRoute, setSelectedRoute] = useState("Simple GPT");
   const [logs, setLogs] = useState([]);
+  const [chatId, setChatId] = useState(0);
+  const [isFetch, setIsFetch] = useState(false);
 
   const router = useRouter();
   const currentPath = usePathname();
@@ -48,8 +50,15 @@ export function NearSimpleGpt() {
     });
 
     socket.on("log", (logMessage) => {
-      console.log("Received log:", logMessage);
-      setLogs((prevLogs) => [...prevLogs, logMessage]);
+      const log = JSON.parse(logMessage);
+      console.log(log);
+      if (log.id === chatId) {
+        const message = log.type + ": " + log.id;
+        if (log.type === "openAiResponseAdded") {
+          setIsFetch(true);
+        }
+        setLogs((prevLogs) => [...prevLogs, message]);
+      }
     });
 
     socket.on("disconnect", () => {
@@ -79,39 +88,9 @@ export function NearSimpleGpt() {
         gas: "300000000000000",
       });
       console.log(response);
+      setChatId(response);
+
       setLogs((prevLogs) => [...prevLogs, `Message sent to oracle`]);
-
-      const callbackResponse = await wallet.viewMethod({
-        contractId: CONTRACT,
-        method: "getMessageHistory",
-        args: { chatId: response },
-      });
-      console.log(callbackResponse);
-
-      let isFound = false;
-      const pollInterval = setInterval(async () => {
-        if (isFound) {
-          clearInterval(pollInterval);
-          return;
-        }
-        const updatedResponse = await wallet.viewMethod({
-          contractId: CONTRACT,
-          method: "getMessageHistory",
-          args: { chatId: response },
-        });
-        if (
-          updatedResponse &&
-          updatedResponse.length > callbackResponse.length
-        ) {
-          const message = {
-            role: updatedResponse[updatedResponse.length - 1].role,
-            content:
-              updatedResponse[updatedResponse.length - 1].content[0].value,
-          };
-          setMessages((prevmessages) => [...prevmessages, message]);
-          isFound = true;
-        }
-      }, 5000);
     }
   };
 
@@ -160,6 +139,25 @@ export function NearSimpleGpt() {
     hidden: { x: "-100%" },
     visible: { x: 0, transition: { duration: 0.3 } },
   };
+
+  useEffect(() => {
+    const fetchMessageData = async () => {
+      if (isFetch) {
+        const updatedResponse = await wallet.viewMethod({
+          contractId: CONTRACT,
+          method: "getMessageHistory",
+          args: { chatId: chatId },
+        });
+        const message = {
+          role: updatedResponse[updatedResponse.length - 1].role,
+          content: updatedResponse[updatedResponse.length - 1].content[0].value,
+        };
+        setMessages((prevmessages) => [...prevmessages, message]);
+        setIsFetch(false);
+      }
+    };
+    fetchMessageData();
+  }, [isFetch]);
 
   return (
     <div className="flex h-screen bg-black text-green-400">

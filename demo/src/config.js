@@ -24,3 +24,4 @@ export const HelloNearContract = contractPerNetwork[NetworkId];
 export const EVMWalletChain = evmWalletChains[NetworkId];
 
 export const simpleGptContract = "simplegpttest.testnet";
+export const functionGptContract = "functioncalltest1.testnet";

@@ -144,7 +144,7 @@ class Oracle implements IOracle {
       .then(
         NearPromise.new(near.currentAccountId()).functionCall(
           "addOpenAiResponse_callback",
-          JSON.stringify({}),
+          JSON.stringify({ promptCallbackID: promptCallbackID }),
           BigInt(0),
           THIRTY_TGAS
         )
@@ -165,10 +165,22 @@ class Oracle implements IOracle {
   }
 
   @call({ privateFunction: true })
-  addOpenAiResponse_callback(): any {
+  addOpenAiResponse_callback({
+    promptCallbackID,
+  }: {
+    promptCallbackID: number;
+  }): any {
     let { result, success } = promiseResult();
 
     if (success) {
+      near.log(
+        JSON.stringify({
+          type: "openAiResponseAdded",
+          data: {
+            promptCallbackID: promptCallbackID,
+          },
+        })
+      );
       return result;
     } else {
       return "";
@@ -286,7 +298,7 @@ class Oracle implements IOracle {
       .then(
         NearPromise.new(near.currentAccountId()).functionCall(
           "addFunctionResponse_callback",
-          JSON.stringify({}),
+          JSON.stringify({ functionCallbackId: functionCallbackId }),
           BigInt(0),
           THIRTY_TGAS
         )
@@ -307,10 +319,22 @@ class Oracle implements IOracle {
   }
 
   @call({})
-  addFunctionResponse_callback(): any {
+  addFunctionResponse_callback({
+    functionCallbackId,
+  }: {
+    functionCallbackId: number;
+  }): any {
     let { result, success } = promiseResult();
 
     if (success) {
+      near.log(
+        JSON.stringify({
+          type: "functionResponseAdded",
+          data: {
+            functionCallbackId: functionCallbackId,
+          },
+        })
+      );
       return result;
     } else {
       return "";

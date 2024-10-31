@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,16 +9,24 @@ import { Volume2, Copy, ThumbsUp, ThumbsDown, RotateCcw } from "lucide-react";
 import { Navigation } from "./navigation";
 
 import { useRouter, usePathname } from "next/navigation";
+import { NearContext } from "@/wallets/near";
+import { simpleGptContract } from "@/config";
+
+import { io } from "socket.io-client";
 
 export function NearFunctionGpt() {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLogoVisible, setIsLogoVisible] = useState(true);
-  const [selectedRoute, setSelectedRoute] = useState("Simple GPT");
+  const [selectedRoute, setSelectedRoute] = useState("GPT with FunctionCall");
+  const [logs, setLogs] = useState([]);
+
   const router = useRouter();
   const currentPath = usePathname();
+  const CONTRACT = simpleGptContract;
 
-  //get the url path
+  // Wallet
+  const { signedAccountId, wallet } = useContext(NearContext);
 
   useEffect(() => {
     console.log(currentPath);
@@ -32,23 +40,78 @@ export function NearFunctionGpt() {
   }, [currentPath]);
 
   useEffect(() => {
+    const socket = io("http://localhost:4000");
+
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket server");
+      setLogs((prevLogs) => [...prevLogs, "Connected to WebSocket server"]);
+    });
+
+    socket.on("log", (logMessage) => {
+      console.log("Received log:", logMessage);
+      setLogs((prevLogs) => [...prevLogs, logMessage]);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Disconnected from WebSocket server");
+      setLogs((prevLogs) => [
+        ...prevLogs,
+        "Disconnected from WebSocket server",
+      ]);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
     setIsLogoVisible(messages.length === 0);
   }, [messages]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (inputMessage.trim() !== "") {
-      setMessages([...messages, { type: "user", content: inputMessage }]);
-      // Simulating a response from the AI
-      setTimeout(() => {
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            type: "ai",
-            content: `This is a simulated response from NEAR AI using ${selectedRoute}.`,
-          },
-        ]);
-      }, 1000);
-      setInputMessage("");
+      setMessages([...messages, { role: "user", content: inputMessage }]);
+      const response = await wallet.callMethod({
+        contractId: CONTRACT,
+        method: "startChat",
+        args: { message: inputMessage },
+        gas: "300000000000000",
+      });
+      console.log(response);
+      setLogs((prevLogs) => [...prevLogs, `Message sent to oracle`]);
+
+      const callbackResponse = await wallet.viewMethod({
+        contractId: CONTRACT,
+        method: "getMessageHistory",
+        args: { chatId: response },
+      });
+      console.log(callbackResponse);
+
+      let isFound = false;
+      const pollInterval = setInterval(async () => {
+        if (isFound) {
+          clearInterval(pollInterval);
+          return;
+        }
+        const updatedResponse = await wallet.viewMethod({
+          contractId: CONTRACT,
+          method: "getMessageHistory",
+          args: { chatId: response },
+        });
+        if (
+          updatedResponse &&
+          updatedResponse.length > callbackResponse.length
+        ) {
+          const message = {
+            role: updatedResponse[updatedResponse.length - 1].role,
+            content:
+              updatedResponse[updatedResponse.length - 1].content[0].value,
+          };
+          setMessages((prevmessages) => [...prevmessages, message]);
+          isFound = true;
+        }
+      }, 5000);
     }
   };
 
@@ -77,6 +140,10 @@ export function NearFunctionGpt() {
         ease: "easeInOut",
       },
     },
+  };
+  const logVariants = {
+    hidden: { opacity: 0, y: -10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
   };
 
   const messageVariants = {
@@ -142,14 +209,14 @@ export function NearFunctionGpt() {
           <AnimatePresence>
             {isLogoVisible && (
               <motion.div
-                className="flex flex-col items-center justify-center h-full"
+                className="flex flex-row items-center justify-center h-full"
                 initial="hidden"
                 animate="visible"
                 exit="hidden"
                 variants={logoVariants}
               >
                 <motion.div
-                  className="w-64 h-64 mb-8"
+                  className="w-64 h-64 mr-8"
                   animate={{
                     rotate: 360,
                     transition: {
@@ -185,22 +252,29 @@ export function NearFunctionGpt() {
                     />
                   </svg>
                 </motion.div>
-                <motion.h2
-                  className="text-7xl font-bold mb-4"
+                <motion.div
+                  className="flex flex-col items-center"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.5 }}
                 >
-                  NEAR.GPT
-                </motion.h2>
-                <motion.p
-                  className="text-2xl text-center max-w-2xl"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.7 }}
-                >
-                  Bringing AI on-chain with the power of NEAR Protocol
-                </motion.p>
+                  <motion.h2
+                    className="text-7xl font-bold mb-4"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.5 }}
+                  >
+                    NEAR.GPT
+                  </motion.h2>
+                  <motion.p
+                    className="text-2xl text-center max-w-2xl"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.7 }}
+                  >
+                    Bringing AI on-chain with the power of NEAR Protocol
+                  </motion.p>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -209,7 +283,7 @@ export function NearFunctionGpt() {
               <motion.div
                 key={index}
                 className={`mb-4 ${
-                  message.type === "user" ? "text-right" : ""
+                  message.role === "user" ? "text-right" : ""
                 }`}
                 variants={messageVariants}
                 initial="hidden"
@@ -218,12 +292,12 @@ export function NearFunctionGpt() {
               >
                 <div
                   className={`inline-block p-3 rounded-lg ${
-                    message.type === "user" ? "bg-green-400/20" : "bg-gray-800"
+                    message.role === "user" ? "bg-green-400/20" : "bg-gray-800"
                   } max-w-[80%]`}
                 >
                   {message.content}
                 </div>
-                {message.type === "ai" && (
+                {message.role === "assistant" && (
                   <motion.div
                     className="flex items-center mt-2 space-x-2"
                     initial={{ opacity: 0 }}
@@ -231,21 +305,15 @@ export function NearFunctionGpt() {
                     transition={{ delay: 0.3 }}
                   >
                     {[Volume2, Copy, ThumbsUp, ThumbsDown, RotateCcw].map(
-                      (Icon, i) => (
-                        <motion.div
-                          key={i}
-                          variants={buttonVariants}
-                          whileHover="hover"
-                          whileTap="tap"
+                      (Icon, iconIndex) => (
+                        <Button
+                          key={iconIndex}
+                          variant="ghost"
+                          size="icon"
+                          className="text-green-400/80 hover:text-green-400"
                         >
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="w-8 h-8 rounded-full"
-                          >
-                            <Icon className="w-4 h-4" />
-                          </Button>
-                        </motion.div>
+                          <Icon className="w-4 h-4" />
+                        </Button>
                       )
                     )}
                   </motion.div>
@@ -254,38 +322,33 @@ export function NearFunctionGpt() {
             ))}
           </AnimatePresence>
         </ScrollArea>
-        <motion.div
-          className="p-4 border-t border-green-400/20"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="flex space-x-2">
-            <Input
-              type="text"
-              placeholder="Message NEAR GPT..."
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-              className="flex-grow bg-gray-800 text-green-400 border-green-400/20 focus:border-green-400 placeholder-green-400/50"
-            />
+        <div className="border-t border-green-400/20 p-4 flex items-center">
+          <Input
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            placeholder="Type your message..."
+            className="flex-grow mr-4"
+          />
+          <Button onClick={handleSendMessage} variant="outline">
+            Send
+          </Button>
+        </div>
+        {/* Logs Section */}
+        <ScrollArea className="border-t border-green-400/20 p-4 h-[20%]">
+          <h3 className="text-xl font-bold mb-2">Logs</h3>
+          {logs.map((log, index) => (
             <motion.div
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
+              key={index}
+              className="p-2 text-sm text-green-400"
+              variants={logVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
             >
-              <Button
-                onClick={handleSendMessage}
-                className="bg-green-400 hover:bg-green-500 text-black"
-              >
-                Send
-              </Button>
+              {log}
             </motion.div>
-          </div>
-          <p className="text-xs text-center mt-2 text-green-400/50">
-            NEAR GPT can make mistakes. Consider checking important information.
-          </p>
-        </motion.div>
+          ))}
+        </ScrollArea>
       </div>
     </div>
   );

@@ -119,14 +119,42 @@ nearStream.on("open", () => {
 
 nearStream.on("message", async (data) => {
   const parseddata = JSON.parse(data.toString()).log_text;
-  realtimeLogger(JSON.stringify(parseddata));
-
   console.log("Received:", parseddata);
   const parsedData = JSON.parse(parseddata);
 
   // Accessing the `data` array from the log_text
   if (parsedData.data) {
     // get the prompt form reciver cpontract
+    if (parsedData.type === "createOpenAiLlmCall") {
+      realtimeLogger(
+        JSON.stringify({
+          type: "createdOpenAiLlmCall",
+          id: parsedData.data.promptCallbackID,
+        })
+      );
+    } else if (parsedData.type === "openAiResponseAdded") {
+      realtimeLogger(
+        JSON.stringify({
+          type: "openAiResponseAdded",
+          id: parsedData.data.promptCallbackID,
+        })
+      );
+    } else if (parsedData.type === "createFunctionCall") {
+      realtimeLogger(
+        JSON.stringify({
+          type: "createdFunctionCall",
+          id: parsedData.data.functionCallbackId,
+        })
+      );
+    } else if (parsedData.type === "functionResponseAdded") {
+      realtimeLogger(
+        JSON.stringify({
+          type: "functionResponseAdded",
+          id: parsedData.data.functionCallbackId,
+        })
+      );
+    }
+
     console.log("data" + parsedData.data);
     if (parsedData.type === "createOpenAiLlmCall") {
       const message = await getMessages(
