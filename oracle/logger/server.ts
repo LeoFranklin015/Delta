@@ -4,10 +4,10 @@ import { Server } from "socket.io";
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server);
+const loggerService = new Server(server);
 
 // Handle incoming connections
-io.on("connection", (socket) => {
+loggerService.on("connection", (socket) => {
   console.log("a user connected");
 
   // Handle incoming messages
@@ -15,7 +15,7 @@ io.on("connection", (socket) => {
     console.log("message received:", data);
 
     // Broadcast the message to all connected clients
-    realtimeLogger(io, data);
+    realtimeLogger(loggerService, data);
   });
 
   // Handle disconnections
@@ -29,6 +29,6 @@ server.listen(3000, () => {
   console.log("listening on PORT 3000");
 });
 
-function realtimeLogger(io: Server, message: string) {
-  io.emit("message", message);
+function realtimeLogger(loggerService: Server, message: string) {
+  loggerService.emit("message", message);
 }

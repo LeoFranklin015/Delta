@@ -6,21 +6,57 @@ import { callOpenAI } from "./utils/openAi";
 import { sendResponseToOracle } from "./utils/sendResponseOracle";
 import { tools } from "./utils/tools";
 import { sendFunctionResponse } from "./utils/sendFunctionResponse";
+import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
+
 const socketUrl = "wss://ws-events.intear.tech/events-testnet/log_text";
 const message = JSON.stringify({ account_id: "oracletest2.testnet" });
 
-console.log("Attempting to connect to WebSocket...");
+const app = express();
+const server = createServer(app);
+const loggerService = new Server(server);
 
-const ws = new WebSocket(socketUrl);
+// Handle incoming connections
+loggerService.on("connection", (socket) => {
+  console.log("a user connected");
 
-ws.on("open", () => {
-  console.log("WebSocket connection established");
-  console.log("Sending message:", message);
-  ws.send(message);
+  // Handle incoming messages
+  socket.on("message", (data) => {
+    console.log("message received:", data);
+
+    // Broadcast the message to all connected clients
+    realtimeLogger(data);
+  });
+
+  // Handle disconnections
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
+  });
 });
 
-ws.on("message", async (data) => {
+// Start the server
+server.listen(3000, () => {
+  console.log("listening on PORT 3000");
+});
+
+function realtimeLogger(message: string) {
+  loggerService.emit("message", message);
+}
+
+console.log("Attempting to connect to WebSocket...");
+
+const nearStream = new WebSocket(socketUrl);
+
+nearStream.on("open", () => {
+  console.log("WebSocket connection established");
+  console.log("Sending message:", message);
+  nearStream.send(message);
+});
+
+nearStream.on("message", async (data) => {
   const parseddata = JSON.parse(data.toString()).log_text;
+  realtimeLogger(JSON.stringify(parseddata));
 
   console.log("Received:", parseddata);
   const parsedData = JSON.parse(parseddata);
@@ -52,7 +88,6 @@ ws.on("message", async (data) => {
         parsedData.data.functionInput
       );
 
-      console.log(response);
       await sendFunctionResponse(
         parseInt(parsedData.data.functionId),
         parseInt(parsedData.data.functionCallbackId),
@@ -63,11 +98,11 @@ ws.on("message", async (data) => {
   }
 });
 
-ws.on("error", (error) => {
+nearStream.on("error", (error) => {
   console.error("WebSocket error:", error);
 });
 
-ws.on("close", (code, reason) => {
+nearStream.on("close", (code, reason) => {
   console.log(`WebSocket connection closed. Code: ${code}, Reason: ${reason}`);
 });
 
@@ -76,6 +111,6 @@ console.log("Script started. Waiting for WebSocket events...");
 // Keep the script running
 process.on("SIGINT", () => {
   console.log("Received SIGINT. Closing WebSocket connection.");
-  ws.close();
+  nearStream.close();
   process.exit(0);
 });
