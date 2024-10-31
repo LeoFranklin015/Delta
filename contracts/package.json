@@ -17,7 +17,7 @@
 
     "deploy-oracle": "near deploy oracletest2.testnet ./build/oracle.wasm",
     "deploy-consumer": "near deploy simplegpttest.testnet ./build/consumer.wasm",
-    "deploy-function": "near deploy functioncalltest1.testnet ./build/function.wasm",
+    "deploy-function": "near deploy functioncalltest1.testnet ./build/function.wasm --initFunction \"init\" --initArgs '{\"oracleAddress\":\"oracletest2.testnet\"}'",
     "deploy-agent": "near deploy agent12.testnet ./build/agent.wasm",
 
     "init-consumer": "near call oracletest2.testnet init '{\"oracleAddress\": \"oracletest2.testnet\"}' --accountId simplegpttest.testnet",
