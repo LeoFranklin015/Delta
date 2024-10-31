@@ -24,7 +24,9 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        const socket = io(
+          "http://localhost:3000"
+        );
         const messagesContainer = document.getElementById('messages-container');
 
         // Handle incoming messages
