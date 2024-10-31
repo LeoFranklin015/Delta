@@ -34,7 +34,7 @@
     "get-messages": "near call simplegpttest.testnet getMessageHistory '{\"chatId\": 41}' --accountId simplegpttest.testnet",
     "get-run": "near call simplegpttest.testnet getChatRuns '{\"chatId\": 94}' --accountId simplegpttest.testnet",   
     "get-function-messages": "near call functioncalltest1.testnet getChatRuns '{\"chatId\":  15}' --accountId functioncalltest1.testnet",
-    "get-agent-messages" : "near view agentstaging.testnet isRunFinished '{\"agentId\": 0}' ",
+    "get-agent-messages" : "near call agentstaging.testnet getMessageHistory '{\"chatId\": 10}' --accountId agentstaging.testnet",
     "test": "$npm_execpath run build && ava -- ./build/oracle.wasm"
   },
   "dependencies": {

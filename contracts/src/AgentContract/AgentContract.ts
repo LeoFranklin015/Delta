@@ -15,8 +15,8 @@ import {
   openAIResponse,
   Message,
   Content,
-} from "./interfaces/IOracle";
-import { IAgent } from "./interfaces/IAgent";
+} from "../interfaces/IOracle";
+import { IAgent } from "../interfaces/IAgent";
 
 const THIRTY_TGAS = BigInt("30000000000000");
 
