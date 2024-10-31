@@ -20,24 +20,33 @@ interface ChatRun {
   messagesCount: number;
 }
 
-@NearBindgen({})
+@NearBindgen({ requireInit: true })
 class FunctionCall implements IFunctionCall {
-  public owner: AccountId;
+  public owner: AccountId = "";
   public chatRuns: LookupMap<ChatRun> = new LookupMap<ChatRun>("chatRuns");
   public chatRunsCount: number = 0;
-  public oracleAddress: AccountId;
-  public config: openAIRequest;
+  public oracleAddress: AccountId = "";
+  public config: openAIRequest = {
+    model: "gpt-3.5-turbo",
+    frequencyPenalty: 0.0,
+    logitBias: "",
+    maxTokens: 1000,
+    presencePenalty: 0.0,
+    responseFormat: '{"type":"text"}',
+    seed: 0,
+    stop: "",
+    temperature: 0.7,
+    topP: 1,
+    tools:
+      '[{"type":"function","function":{"name":"websearch","description":"Search the web for current information","parameters":{"type":"object","properties":{"query":{"type":"string","description":"The search query"}},"required":["query"]}}}]',
+    toolChoice: "auto",
+    user: "",
+  };
 
   @initialize({})
-  init({
-    owner,
-    oracleAddress,
-  }: {
-    owner: AccountId;
-    oracleAddress: AccountId;
-  }): void {
+  init({ oracleAddress }: { oracleAddress: AccountId }): void {
     this.owner = near.predecessorAccountId();
-    this.oracleAddress = "oracletest2.testnet";
+    this.oracleAddress = oracleAddress;
 
     this.config = {
       model: "gpt-3.5-turbo",
@@ -77,7 +86,6 @@ class FunctionCall implements IFunctionCall {
   @call({})
   startChat({ message }: { message: string }): NearPromise {
     const run: ChatRun = {
-      owner: near.predecessorAccountId(),
       messages: [],
       messagesCount: 0,
     };

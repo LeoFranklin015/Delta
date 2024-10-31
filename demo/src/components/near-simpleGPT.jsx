@@ -141,6 +141,10 @@ export function NearSimpleGpt() {
       },
     },
   };
+  const logVariants = {
+    hidden: { opacity: 0, y: -10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  };
 
   const messageVariants = {
     hidden: { opacity: 0, y: 50 },
@@ -205,14 +209,14 @@ export function NearSimpleGpt() {
           <AnimatePresence>
             {isLogoVisible && (
               <motion.div
-                className="flex flex-col items-center justify-center h-full"
+                className="flex flex-row items-center justify-center h-full"
                 initial="hidden"
                 animate="visible"
                 exit="hidden"
                 variants={logoVariants}
               >
                 <motion.div
-                  className="w-64 h-64 mb-8"
+                  className="w-64 h-64 mr-8"
                   animate={{
                     rotate: 360,
                     transition: {
@@ -248,22 +252,29 @@ export function NearSimpleGpt() {
                     />
                   </svg>
                 </motion.div>
-                <motion.h2
-                  className="text-7xl font-bold mb-4"
+                <motion.div
+                  className="flex flex-col items-center"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.5 }}
                 >
-                  NEAR.GPT
-                </motion.h2>
-                <motion.p
-                  className="text-2xl text-center max-w-2xl"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.7 }}
-                >
-                  Bringing AI on-chain with the power of NEAR Protocol
-                </motion.p>
+                  <motion.h2
+                    className="text-7xl font-bold mb-4"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.5 }}
+                  >
+                    NEAR.GPT
+                  </motion.h2>
+                  <motion.p
+                    className="text-2xl text-center max-w-2xl"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.7 }}
+                  >
+                    Bringing AI on-chain with the power of NEAR Protocol
+                  </motion.p>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -318,15 +329,24 @@ export function NearSimpleGpt() {
             placeholder="Type your message..."
             className="flex-grow mr-4"
           />
-          <Button onClick={handleSendMessage}>Send</Button>
+          <Button onClick={handleSendMessage} variant="outline">
+            Send
+          </Button>
         </div>
         {/* Logs Section */}
         <ScrollArea className="border-t border-green-400/20 p-4 h-[20%]">
           <h3 className="text-xl font-bold mb-2">Logs</h3>
           {logs.map((log, index) => (
-            <p key={index} className="text-sm text-green-400">
+            <motion.div
+              key={index}
+              className="p-2 text-sm text-green-400"
+              variants={logVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+            >
               {log}
-            </p>
+            </motion.div>
           ))}
         </ScrollArea>
       </div>
