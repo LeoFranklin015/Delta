@@ -16,6 +16,7 @@ import {
   Message,
   Content,
 } from "./interfaces/IOracle";
+import { IAgent } from "./interfaces/IAgent";
 
 const THIRTY_TGAS = BigInt("30000000000000");
 
@@ -31,7 +32,7 @@ interface AgentRun {
 
 // @title Agent
 // @notice This contract interacts with teeML oracle to run agents that perform multiple iterations of querying and respond
-class Agent {
+class Agent implements IAgent {
   public prompt: string;
 
   // @notice Mapping from run ID to AgentRun

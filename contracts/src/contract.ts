@@ -11,6 +11,7 @@ import {
 } from "near-sdk-js";
 import { AccountId } from "near-sdk-js";
 import { openAIRequest, openAIResponse, Message } from "./interfaces/IOracle";
+import { ISimpleGpt } from "./interfaces/ISimpleGpt";
 
 const THIRTY_TGAS = BigInt("30000000000000");
 
@@ -19,7 +20,7 @@ interface ChatRun {
   messagesCount: number;
 }
 @NearBindgen({})
-class ChatGPT {
+class ChatGPT implements ISimpleGpt {
   public owner: AccountId = "simplegpttest.testnet";
   public chatRuns: LookupMap<ChatRun> = new LookupMap<ChatRun>("chatRuns");
   public chatRunsCount: number = 0;

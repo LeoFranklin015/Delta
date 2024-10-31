@@ -11,6 +11,7 @@ import {
 } from "near-sdk-js";
 import { AccountId } from "near-sdk-js";
 import { openAIRequest, openAIResponse, Message } from "../interfaces/IOracle";
+import { IFunctionCall } from "../interfaces/IFunctionCall";
 
 const THIRTY_TGAS = BigInt("30000000000000");
 const SIXTY_TGAS = BigInt("60000000000000");
@@ -22,7 +23,7 @@ interface ChatRun {
 }
 
 @NearBindgen({})
-class FunctionCall {
+class FunctionCall implements IFunctionCall {
   public owner: AccountId;
   public chatRuns: LookupMap<ChatRun> = new LookupMap<ChatRun>("chatRuns");
   public chatRunsCount: number = 0;
