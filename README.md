@@ -5,6 +5,8 @@
 
 Theseus AI serves as a decentralized AI oracle designed to empower developers by seamlessly integrating powerful AI functionalities into any smart contract on the NEAR Protocol. This innovative platform allows any NEAR smart contract to call the Theseus oracle contract, enabling it to leverage advanced AI capabilities without the constraints of traditional centralized solutions. By utilizing a network of permissionless nodes, Theseus AI processes complex OpenAI LLM requests, returning transparent and verifiable results. This integration not only enhances the functionality of smart contracts but also paves the way for a new era of decentralized AI applications on the blockchain, where trust, scalability, and efficiency are paramount.
 
+![mindmap](https://github.com/user-attachments/assets/c1314242-0980-4ac2-bbc7-559400ae2eb0)
+
 ## Documentation 
 
 Here is a detailed documentation to integrate Theseus AI Oracle into your Near SmartContract. [Documentation](https://hackventures.gitbook.io/theseus)
