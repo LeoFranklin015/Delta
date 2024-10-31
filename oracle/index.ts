@@ -36,7 +36,7 @@ loggerService.on("connection", (socket) => {
   });
 });
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const __dirname = dirname(fileURLToPath(__filename));
 
 app.get("/", (req, res) => {
   res.sendFile(join(__dirname, "logger/client.html"));
