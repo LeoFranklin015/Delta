@@ -20,37 +20,36 @@ interface ChatRun {
 }
 @NearBindgen({})
 class ChatGPT {
-  public owner: AccountId;
+  public owner: AccountId = "simplegpttest.testnet";
   public chatRuns: LookupMap<ChatRun> = new LookupMap<ChatRun>("chatRuns");
   public chatRunsCount: number = 0;
-  public oracleAddress: AccountId;
-  public config: openAIRequest;
-
-  constructor() {
-    this.owner = near.predecessorAccountId();
-    this.oracleAddress = "oracletest2.testnet";
-
-    this.config = {
-      model: "gpt-4-turbo-preview",
-      frequencyPenalty: 0.0,
-      logitBias: "",
-      maxTokens: 1000,
-      presencePenalty: 0.0,
-      responseFormat: '{"type":"text"}',
-      seed: 0,
-      stop: "",
-      temperature: 0.7,
-      topP: 1,
-      tools: "",
-      toolChoice: "none",
-      user: "",
-    };
-  }
+  public oracleAddress: AccountId = "oracletest2.testnet";
+  public config: openAIRequest = {
+    model: "gpt-4-turbo-preview",
+    frequencyPenalty: 0.0,
+    logitBias: "",
+    maxTokens: 1000,
+    presencePenalty: 0.0,
+    responseFormat: '{"type":"text"}',
+    seed: 0,
+    stop: "",
+    temperature: 0.7,
+    topP: 1,
+    tools: "",
+    toolChoice: "none",
+    user: "",
+  };
 
   @initialize({})
-  init(): void {
-    this.owner = near.predecessorAccountId();
-    this.oracleAddress = "oracletest2.testnet";
+  init({
+    owner,
+    oracleAddress,
+  }: {
+    owner: AccountId;
+    oracleAddress: AccountId;
+  }): void {
+    this.owner = owner;
+    this.oracleAddress = oracleAddress;
 
     this.config = {
       model: "gpt-4-turbo-preview",
