@@ -10,8 +10,6 @@ import { sendFunctionResponse } from "./utils/sendFunctionResponse";
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
 const socketUrl = "wss://ws-events.intear.tech/events-testnet/log_text";
 const message = JSON.stringify({ account_id: "oracletest2.testnet" });
 
@@ -100,9 +98,9 @@ app.get("/", (req, res) => {
 </html>`);
 });
 // Start the server
-server.listen(4000, () => {
-  console.log("listening on PORT 4000");
-});
+// server.listen(4000, () => {
+//   console.log("listening on PORT 4000");
+// });
 
 function realtimeLogger(message: string) {
   loggerService.emit("log", message);
