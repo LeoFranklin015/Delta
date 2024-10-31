@@ -21,7 +21,6 @@ import { IAgent } from "./interfaces/IAgent";
 const THIRTY_TGAS = BigInt("30000000000000");
 
 interface AgentRun {
-  owner: AccountId;
   messages: Message[];
   responseCount: number;
   maxIterations: number;
@@ -33,44 +32,35 @@ interface AgentRun {
 // @title Agent
 // @notice This contract interacts with teeML oracle to run agents that perform multiple iterations of querying and respond
 class Agent implements IAgent {
-  public prompt: string;
+  public prompt: string = "";
 
   // @notice Mapping from run ID to AgentRun
   public agentRuns: LookupMap<AgentRun> = new LookupMap<AgentRun>("agentRuns");
   public agentRunsCount: number = 0;
 
   // @notice Address of the contract owner
-  private owner: AccountId;
+  private owner: AccountId = "";
 
   // @notice Address of the oracle contract
-  public oracleAddress: AccountId;
+  public oracleAddress: AccountId = "";
 
   // @notice Configuration for the OpenAI request
-  private config: openAIRequest;
-
-  constructor(initialOracleAddress: AccountId, initialPrompt: string) {
-    this.owner = near.predecessorAccountId();
-    this.oracleAddress = "oracletest2.testnet";
-    this.prompt =
-      "You are a agent who can access Web . Do task iteratively and produce result";
-
-    this.config = {
-      model: "gpt-3.5-turbo",
-      frequencyPenalty: 0.0,
-      logitBias: "",
-      maxTokens: 1000,
-      presencePenalty: 0.0,
-      responseFormat: '{"type":"text"}',
-      seed: 0,
-      stop: "",
-      temperature: 0.7,
-      topP: 1,
-      tools:
-        '[{"type":"function","function":{"name":"websearch","description":"Search the web for current information","parameters":{"type":"object","properties":{"query":{"type":"string","description":"The search query"}},"required":["query"]}}}]',
-      toolChoice: "auto",
-      user: "",
-    };
-  }
+  private config: openAIRequest = {
+    model: "gpt-3.5-turbo",
+    frequencyPenalty: 0.0,
+    logitBias: "",
+    maxTokens: 1000,
+    presencePenalty: 0.0,
+    responseFormat: '{"type":"text"}',
+    seed: 0,
+    stop: "",
+    temperature: 0.7,
+    topP: 1,
+    tools:
+      '[{"type":"function","function":{"name":"websearch","description":"Search the web for current information","parameters":{"type":"object","properties":{"query":{"type":"string","description":"The search query"}},"required":["query"]}}}]',
+    toolChoice: "auto",
+    user: "",
+  };
 
   @initialize({})
   init({
@@ -81,9 +71,8 @@ class Agent implements IAgent {
     initialPrompt: string;
   }) {
     this.owner = near.predecessorAccountId();
-    this.oracleAddress = "oracletest2.testnet";
-    this.prompt =
-      "You are a agent who can access Web . Do task iteratively and produce result";
+    this.oracleAddress = initialOracleAddress;
+    this.prompt = initialPrompt;
 
     this.config = {
       model: "gpt-3.5-turbo",
@@ -132,7 +121,6 @@ class Agent implements IAgent {
     maxIterations: number;
   }): NearPromise {
     const run: AgentRun = {
-      owner: near.predecessorAccountId(),
       messages: [],
       responseCount: 0,
       maxIterations: maxIterations,
@@ -335,7 +323,8 @@ class Agent implements IAgent {
     return run.messages;
   }
 
-  public isRunFinished(agentId: number): boolean {
+  @view({})
+  public isRunFinished({ agentId }: { agentId: number }): boolean {
     const run = this.agentRuns.get(agentId.toString());
     return run.isFinished;
   }
