@@ -15,7 +15,6 @@ import { openAIRequest, openAIResponse, Message } from "./interfaces/IOracle";
 const THIRTY_TGAS = BigInt("30000000000000");
 
 interface ChatRun {
-  owner: AccountId;
   messages: Message[];
   messagesCount: number;
 }
@@ -95,7 +94,6 @@ class ChatGPT {
   @call({})
   startChat(message: string): NearPromise {
     const run: ChatRun = {
-      owner: near.predecessorAccountId(),
       messages: [],
       messagesCount: 0,
     };
@@ -121,7 +119,7 @@ class ChatGPT {
       .then(
         NearPromise.new(near.currentAccountId()).functionCall(
           "startChat_callback",
-          JSON.stringify({}),
+          JSON.stringify({ runId: currentId }),
           BigInt(0),
           THIRTY_TGAS
         )
@@ -131,11 +129,11 @@ class ChatGPT {
 
   // Test
   @call({ privateFunction: true })
-  startChat_callback(): any {
+  startChat_callback({ runId }: { runId: number }): any {
     let { result, success } = promiseResult();
 
     if (success) {
-      return result;
+      return runId;
     } else {
       near.log("Promise failed...");
       return "";
@@ -177,37 +175,6 @@ class ChatGPT {
     }
   }
 
-  // @notice Adds a new message to an existing chat run
-  // @param message The new message to add
-  // @param runId The ID of the chat run
-  @call({})
-  addMessage(message: string, runId: number): void {
-    const run = this.chatRuns.get(runId.toString());
-    assert(run, "Chat run not found");
-    assert(
-      run.messages[run.messagesCount - 1].role === "assistant",
-      "No response to previous message"
-    );
-    assert(
-      run.owner === near.predecessorAccountId(),
-      "Only chat owner can add messages"
-    );
-
-    const newMessage = this.createTextMessage("user", message);
-    run.messages.push(newMessage);
-    run.messagesCount++;
-
-    NearPromise.new(this.oracleAddress).functionCall(
-      "createOpenAiLlmCall",
-      JSON.stringify({
-        promptCallbackID: runId,
-        request: this.config,
-      }),
-      BigInt(0),
-      THIRTY_TGAS
-    );
-  }
-
   // @notice Retrieves the message history of a chat run
   // @param chatId The ID of the chat run
   // @return An array of messages
@@ -218,6 +185,8 @@ class ChatGPT {
     assert(run, "Chat run not found");
     return run.messages;
   }
+
+  @view({})
 
   // @notice Creates a text message with the given role and content
   // @param role The role of the message
@@ -233,6 +202,11 @@ class ChatGPT {
   @view({})
   public getChatRuns({ chatId }: { chatId: number }): any {
     return this.chatRuns.get(chatId.toString());
+  }
+
+  @view({})
+  public getChatRunsCount(): number {
+    return this.chatRunsCount;
   }
 }
 
