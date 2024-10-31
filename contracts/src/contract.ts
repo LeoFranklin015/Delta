@@ -19,12 +19,12 @@ interface ChatRun {
   messages: Message[];
   messagesCount: number;
 }
-@NearBindgen({})
+@NearBindgen({ requireInit: true })
 class ChatGPT implements ISimpleGpt {
-  public owner: AccountId = "simplegpttest.testnet";
+  public owner: AccountId = "";
   public chatRuns: LookupMap<ChatRun> = new LookupMap<ChatRun>("chatRuns");
   public chatRunsCount: number = 0;
-  public oracleAddress: AccountId = "oracletest2.testnet";
+  public oracleAddress: AccountId = "";
   public config: openAIRequest = {
     model: "gpt-4-turbo-preview",
     frequencyPenalty: 0.0,
@@ -42,15 +42,9 @@ class ChatGPT implements ISimpleGpt {
   };
 
   @initialize({})
-  init({
-    owner,
-    oracleAddress,
-  }: {
-    owner: AccountId;
-    oracleAddress: AccountId;
-  }): void {
-    this.owner = owner;
-    this.oracleAddress = oracleAddress;
+  init({ initialOracleAddress }: { initialOracleAddress: AccountId }): void {
+    this.owner = near.predecessorAccountId();
+    this.oracleAddress = initialOracleAddress;
 
     this.config = {
       model: "gpt-4-turbo-preview",

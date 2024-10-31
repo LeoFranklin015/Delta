@@ -12,22 +12,21 @@ import { useRouter, usePathname } from "next/navigation";
 import { NearContext } from "@/wallets/near";
 import { simpleGptContract } from "@/config";
 
-import { getMessages } from "@/lib/getMessage";
+import { io } from "socket.io-client";
 
 export function NearSimpleGpt() {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLogoVisible, setIsLogoVisible] = useState(true);
   const [selectedRoute, setSelectedRoute] = useState("Simple GPT");
+  const [logs, setLogs] = useState([]);
 
   const router = useRouter();
   const currentPath = usePathname();
   const CONTRACT = simpleGptContract;
 
-  //Wallet
+  // Wallet
   const { signedAccountId, wallet } = useContext(NearContext);
-
-  //get the url path
 
   useEffect(() => {
     console.log(currentPath);
@@ -39,6 +38,32 @@ export function NearSimpleGpt() {
         : "Agent"
     );
   }, [currentPath]);
+
+  useEffect(() => {
+    const socket = io("http://localhost:4000");
+
+    socket.on("connect", () => {
+      console.log("Connected to WebSocket server");
+      setLogs((prevLogs) => [...prevLogs, "Connected to WebSocket server"]);
+    });
+
+    socket.on("log", (logMessage) => {
+      console.log("Received log:", logMessage);
+      setLogs((prevLogs) => [...prevLogs, logMessage]);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Disconnected from WebSocket server");
+      setLogs((prevLogs) => [
+        ...prevLogs,
+        "Disconnected from WebSocket server",
+      ]);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     setIsLogoVisible(messages.length === 0);
@@ -54,6 +79,8 @@ export function NearSimpleGpt() {
         gas: "300000000000000",
       });
       console.log(response);
+      setLogs((prevLogs) => [...prevLogs, `Message sent to oracle`]);
+
       const callbackResponse = await wallet.viewMethod({
         contractId: CONTRACT,
         method: "getMessageHistory",
@@ -76,7 +103,6 @@ export function NearSimpleGpt() {
           updatedResponse &&
           updatedResponse.length > callbackResponse.length
         ) {
-          console.log(updatedResponse.length, callbackResponse.length);
           const message = {
             role: updatedResponse[updatedResponse.length - 1].role,
             content:
@@ -85,8 +111,6 @@ export function NearSimpleGpt() {
           setMessages((prevmessages) => [...prevmessages, message]);
           isFound = true;
         }
-
-        console.log(updatedResponse);
       }, 5000);
     }
   };
@@ -270,21 +294,15 @@ export function NearSimpleGpt() {
                     transition={{ delay: 0.3 }}
                   >
                     {[Volume2, Copy, ThumbsUp, ThumbsDown, RotateCcw].map(
-                      (Icon, i) => (
-                        <motion.div
-                          key={i}
-                          variants={buttonVariants}
-                          whileHover="hover"
-                          whileTap="tap"
+                      (Icon, iconIndex) => (
+                        <Button
+                          key={iconIndex}
+                          variant="ghost"
+                          size="icon"
+                          className="text-green-400/80 hover:text-green-400"
                         >
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="w-8 h-8 rounded-full"
-                          >
-                            <Icon className="w-4 h-4" />
-                          </Button>
-                        </motion.div>
+                          <Icon className="w-4 h-4" />
+                        </Button>
                       )
                     )}
                   </motion.div>
@@ -293,38 +311,24 @@ export function NearSimpleGpt() {
             ))}
           </AnimatePresence>
         </ScrollArea>
-        <motion.div
-          className="p-4 border-t border-green-400/20"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="flex space-x-2">
-            <Input
-              type="text"
-              placeholder="Message NEAR GPT..."
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-              className="flex-grow bg-gray-800 text-green-400 border-green-400/20 focus:border-green-400 placeholder-green-400/50"
-            />
-            <motion.div
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <Button
-                onClick={handleSendMessage}
-                className="bg-green-400 hover:bg-green-500 text-black"
-              >
-                Send
-              </Button>
-            </motion.div>
-          </div>
-          <p className="text-xs text-center mt-2 text-green-400/50">
-            NEAR GPT can make mistakes. Consider checking important information.
-          </p>
-        </motion.div>
+        <div className="border-t border-green-400/20 p-4 flex items-center">
+          <Input
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            placeholder="Type your message..."
+            className="flex-grow mr-4"
+          />
+          <Button onClick={handleSendMessage}>Send</Button>
+        </div>
+        {/* Logs Section */}
+        <ScrollArea className="border-t border-green-400/20 p-4 h-[20%]">
+          <h3 className="text-xl font-bold mb-2">Logs</h3>
+          {logs.map((log, index) => (
+            <p key={index} className="text-sm text-green-400">
+              {log}
+            </p>
+          ))}
+        </ScrollArea>
       </div>
     </div>
   );

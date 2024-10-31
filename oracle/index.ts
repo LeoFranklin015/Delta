@@ -16,7 +16,11 @@ const message = JSON.stringify({ account_id: "oracletest2.testnet" });
 
 const app = express();
 const server = createServer(app);
-const loggerService = new Server(server);
+const loggerService = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
 
 // Handle incoming connections
 loggerService.on("connection", (socket) => {
@@ -100,7 +104,7 @@ server.listen(4000, () => {
 });
 
 function realtimeLogger(message: string) {
-  loggerService.emit("message", message);
+  loggerService.emit("log", message);
 }
 
 console.log("Attempting to connect to WebSocket...");

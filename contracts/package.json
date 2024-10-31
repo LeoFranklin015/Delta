@@ -20,7 +20,7 @@
     "deploy-function": "near deploy functioncall2.testnet ./build/function.wasm",
     "deploy-agent": "near deploy agent12.testnet ./build/agent.wasm",
 
-    "init-consumer": "near call oracletest2.testnet init '{}' --accountId simplegpttest.testnet",
+    "init-consumer": "near call oracletest2.testnet init '{\"initialOracleAddress\": \"oracletest2.testnet\"}' --accountId simplegpttest.testnet",
     "init-oracle": "near call oracletest2.testnet init '{}' --accountId oracletest2.testnet",
     "init-function": "near call oracletest2.testnet init '{}' --accountId functioncall2.testnet",
     "init-agent": "near call oracletest2.testnet init '{\"initialOracleAddress\": \"oracletest2.testnet\", \"initialPrompt\": \"You are a agent who can access Web . Do task iteratively and produce result\"}' --accountId agent12.testnet",

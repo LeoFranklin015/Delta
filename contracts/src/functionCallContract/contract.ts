@@ -14,10 +14,8 @@ import { openAIRequest, openAIResponse, Message } from "../interfaces/IOracle";
 import { IFunctionCall } from "../interfaces/IFunctionCall";
 
 const THIRTY_TGAS = BigInt("30000000000000");
-const SIXTY_TGAS = BigInt("60000000000000");
 
 interface ChatRun {
-  owner: AccountId;
   messages: Message[];
   messagesCount: number;
 }
@@ -30,30 +28,14 @@ class FunctionCall implements IFunctionCall {
   public oracleAddress: AccountId;
   public config: openAIRequest;
 
-  constructor() {
-    this.owner = near.predecessorAccountId();
-    this.oracleAddress = "oracletest2.testnet";
-
-    this.config = {
-      model: "gpt-3.5-turbo",
-      frequencyPenalty: 0.0,
-      logitBias: "",
-      maxTokens: 1000,
-      presencePenalty: 0.0,
-      responseFormat: '{"type":"text"}',
-      seed: 0,
-      stop: "",
-      temperature: 0.7,
-      topP: 1,
-      tools:
-        '[{"type":"function","function":{"name":"websearch","description":"Search the web for current information","parameters":{"type":"object","properties":{"query":{"type":"string","description":"The search query"}},"required":["query"]}}}]',
-      toolChoice: "auto",
-      user: "",
-    };
-  }
-
   @initialize({})
-  init(): void {
+  init({
+    owner,
+    oracleAddress,
+  }: {
+    owner: AccountId;
+    oracleAddress: AccountId;
+  }): void {
     this.owner = near.predecessorAccountId();
     this.oracleAddress = "oracletest2.testnet";
 
