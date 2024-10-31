@@ -37,7 +37,7 @@ loggerService.on("connection", (socket) => {
 });
 
 // Start the server
-server.listen(4000, () => {
+server.listen(process.env.PORT || 4000, () => {
   console.log("listening on PORT 4000");
 });
 
