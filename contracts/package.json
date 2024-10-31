@@ -31,8 +31,8 @@
     
     "get-messages": "near call consumer12345.testnet getMessageHistory '{\"chatId\": 92}' --accountId consumer12345.testnet",
     "get-run": "near call consumer12345.testnet getChatRuns '{\"chatId\": 94}' --accountId consumer12345.testnet",   
-    "get-function-messages": "near call functioncall2.testnet getChatRuns '{\"chatId\":  13}' --accountId functioncall2.testnet",
-    "get-agent-messages" : "near call agent12.testnet getMessageHistory '{\"chatId\": 10}' --accountId agent12.testnet",
+    "get-function-messages": "near call functioncall2.testnet getChatRuns '{\"chatId\":  14}' --accountId functioncall2.testnet",
+    "get-agent-messages" : "near call agent12.testnet getMessageHistory '{\"chatId\": 13}' --accountId agent12.testnet",
     "test": "$npm_execpath run build && ava -- ./build/oracle.wasm"
   },
   "dependencies": {

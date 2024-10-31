@@ -33,7 +33,7 @@ export async function callOpenAI(message: any[], config: any): Promise<any> {
 
     const response = {
       id: initialResponse.data.id,
-      content: initialResponse.data.choices[0].message.content || "No Response",
+      content: initialResponse.data.choices[0].message.content,
       functionName:
         (initialResponse.data.choices[0].message.tool_calls &&
           initialResponse.data.choices[0].message.tool_calls[0].function

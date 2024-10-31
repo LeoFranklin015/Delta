@@ -220,7 +220,7 @@ class Agent {
       return;
     }
 
-    if (response.content != "No Response") {
+    if (response.content != null) {
       const newMessage = this.createTextMessage("assistant", response.content);
       run.messages.push(newMessage);
       run.responseCount++;

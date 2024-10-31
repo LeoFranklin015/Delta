@@ -53,6 +53,7 @@ export async function getOpenAIResponse(prompt: string): Promise<string> {
     );
 
     const initialMessage = initialResponse.data.choices[0].message;
+    console.log(initialMessage);
 
     if (initialMessage.tool_calls) {
       const toolCall = initialMessage.tool_calls[0];

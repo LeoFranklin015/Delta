@@ -45,7 +45,6 @@ const ws = new WebSocket(nearIndexerWS);
   ws.on("message", async (data) => {
     const parsedMessage = JSON.parse(data.toString()).log_text;
 
-    console.log("Received:", parsedMessage);
     const response = JSON.parse(parsedMessage);
 
     const { data: dataToBeProcessed } = response;
@@ -57,8 +56,10 @@ const ws = new WebSocket(nearIndexerWS);
       let msg: string = msgBytes.toString();
 
       if (msg === "ready" || msg === "done") {
-        console.log(colors.magenta("Received data:" + dataToBeProcessed.data));
-        theseus.send(dataToBeProcessed);
+        console.log(
+          colors.magenta("Received data:" + JSON.stringify(dataToBeProcessed))
+        );
+        theseus.send(JSON.stringify(response));
       }
     }
   });
