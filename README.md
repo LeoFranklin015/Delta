@@ -29,6 +29,12 @@ Here is a detailed documentation to integrate Theseus AI Oracle into your Near S
 - Demo : https://youtu.be/GIjAdkXC2DU
 
 
+## Deployment addresses
+- **Oracle contract account**: oracletest2.testnet
+- **Function calling contract account**: functioncalltest1.testnet
+- **Agent contract account**: agentstaging.testnet
+- **SimpleGPT contract account**: simplegpttest.testnet
+
 ## Inspiration
 
 At the intersection of AI and crypto lies untapped potential. Many web3 products envision on-chain AI as the future, bringing transparency, provability, and decentralization to AI interactions. Theseus AI addresses the limitations of existing oracle solutions by enabling verifiable and decentralized AI computation on-chain.
