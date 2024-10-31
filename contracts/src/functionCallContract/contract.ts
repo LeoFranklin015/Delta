@@ -110,7 +110,7 @@ class FunctionCall implements IFunctionCall {
       .then(
         NearPromise.new(near.currentAccountId()).functionCall(
           "startChat_callback",
-          JSON.stringify({}),
+          JSON.stringify({ runId: currentId }),
           BigInt(0),
           THIRTY_TGAS
         )
@@ -161,7 +161,7 @@ class FunctionCall implements IFunctionCall {
           .then(
             NearPromise.new(near.currentAccountId()).functionCall(
               "startChat_callback",
-              JSON.stringify({}),
+              JSON.stringify({ runId: runId }),
               BigInt(0),
               THIRTY_TGAS
             )
@@ -211,7 +211,7 @@ class FunctionCall implements IFunctionCall {
         .then(
           NearPromise.new(near.currentAccountId()).functionCall(
             "startChat_callback",
-            JSON.stringify({}),
+            JSON.stringify({ runId: runId }),
             BigInt(0),
             THIRTY_TGAS
           )
@@ -230,11 +230,11 @@ class FunctionCall implements IFunctionCall {
   }
 
   @call({ privateFunction: true })
-  startChat_callback(): any {
+  startChat_callback({ runId }: { runId: number }): any {
     let { result, success } = promiseResult();
 
     if (success) {
-      return result;
+      return runId;
     } else {
       near.log("Promise failed...");
       return "";

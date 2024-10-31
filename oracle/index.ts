@@ -144,6 +144,7 @@ nearStream.on("message", async (data) => {
         JSON.stringify({
           type: "createdFunctionCall",
           id: parsedData.data.functionCallbackId,
+          functionType: parsedData.data.functionType,
         })
       );
     } else if (parsedData.type === "functionResponseAdded") {

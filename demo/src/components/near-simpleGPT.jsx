@@ -52,13 +52,13 @@ export function NearSimpleGpt() {
     socket.on("log", (logMessage) => {
       const log = JSON.parse(logMessage);
       console.log(log);
-      if (log.id === chatId) {
-        const message = log.type + ": " + log.id;
-        if (log.type === "openAiResponseAdded") {
-          setIsFetch(true);
-        }
-        setLogs((prevLogs) => [...prevLogs, message]);
+      // if (log.id === chatId) {
+      const message = log.type + ": " + log.id;
+      if (log.type === "openAiResponseAdded") {
+        setIsFetch(true);
       }
+      setLogs((prevLogs) => [...prevLogs, message]);
+      // }
     });
 
     socket.on("disconnect", () => {

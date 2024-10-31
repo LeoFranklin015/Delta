@@ -1,5 +1,5 @@
-import { NearFunctionGpt } from "@/components/near-functionGpt";
+import { NearFunctionGptComponent } from "@/components/near-function-gpt";
 
 export default function page() {
-  return <NearFunctionGpt />;
+  return <NearFunctionGptComponent />;
 }

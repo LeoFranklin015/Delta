@@ -29,7 +29,7 @@
     "start-function-chat" : "near call functioncalltest1.testnet startChat '{\"message\": \"Get me the current news about US election\"}' --accountId functioncalltest1.testnet --gas 300000000000000",
     "start-agent-chat": "near call agent12.testnet runAgent '{\"query\": \"Get me the current news about US election\", \"maxIterations\": 2}' --accountId agent12.testnet --gas 300000000000000",
     
-    "get-messages": "near call simplegpttest.testnet getMessageHistory '{\"chatId\": 92}' --accountId simplegpttest.testnet",
+    "get-messages": "near call simplegpttest.testnet getMessageHistory '{\"chatId\": 41}' --accountId simplegpttest.testnet",
     "get-run": "near call simplegpttest.testnet getChatRuns '{\"chatId\": 94}' --accountId simplegpttest.testnet",   
     "get-function-messages": "near call functioncalltest1.testnet getChatRuns '{\"chatId\":  14}' --accountId functioncalltest1.testnet",
     "get-agent-messages" : "near call agent12.testnet getMessageHistory '{\"chatId\": 14}' --accountId agent12.testnet",
