@@ -41,6 +41,10 @@ server.listen(process.env.PORT || 4000, () => {
   console.log("listening on PORT 4000");
 });
 
+app.get("/health", (req, res) => {
+  res.status(200).send("Server is running");
+});
+
 function realtimeLogger(message: string) {
   loggerService.emit("log", message);
 }
