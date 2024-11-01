@@ -42,7 +42,7 @@ export function NearSimpleGpt() {
   }, [currentPath]);
 
   useEffect(() => {
-    const socket = io("http://localhost:4000");
+    const socket = io("https://theseus-owsg.onrender.com");
 
     socket.on("connect", () => {
       console.log("Connected to WebSocket server");
