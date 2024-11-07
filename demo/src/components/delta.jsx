@@ -33,7 +33,7 @@ export function Delta() {
       title: "Post Disaster Claim",
       description: "Submit proof and unlock remaining funds post-disaster",
       icon: Upload,
-      href: "/delta/post-disaster-claim",
+      href: "/delta/claim-fund",
       color:
         "from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20",
     },
