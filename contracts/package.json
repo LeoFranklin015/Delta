@@ -1,0 +1,63 @@
+{
+  "name": "hello_near",
+  "version": "1.0.0",
+  "license": "(MIT AND Apache-2.0)",
+  "type": "module",
+  "scripts": {
+    "build-oracle": "near-sdk-js build src/oracle/contract.ts build/oracle.wasm",
+    "build-consumer": "near-sdk-js build src/contract.ts build/consumer.wasm",
+    "build-function": "near-sdk-js build src/functionCallContract/contract.ts build/function.wasm",
+    "build-agent": "near-sdk-js build src/AgentContract.ts build/agent.wasm",
+    "build-delta" : "near-sdk-js build src/Delta/contract.ts build/delta.wasm",
+
+
+    "create-oracle-account": "near create-account oracletest2.testnet --useFaucet",
+    "create-consumer-account": "near create-account simplegpttest.testnet --useFaucet",
+    "create-function-account": "near create-account functioncalltest1.testnet --useFaucet",
+    "create-agent-account": "near create-account agentstaging.testnet --useFaucet",
+    "create-delta-account": "near create-account deltaagenttest4.testnet --useFaucet",
+
+    "deploy-oracle": "near deploy oracletest2.testnet ./build/oracle.wasm",
+    "deploy-consumer": "near deploy simplegpttest.testnet ./build/consumer.wasm",
+    "deploy-function": "near deploy functioncalltest1.testnet ./build/function.wasm --initFunction \"init\" --initArgs '{\"oracleAddress\":\"oracletest2.testnet\"}'",
+    "deploy-agent": "near deploy agentstaging.testnet ./build/agent.wasm",
+    "deployInit-agent": "near deploy agentstaging.testnet ./build/agent.wasm --initFunction \"init\" --initArgs '{\"initialOracleAddress\":\"oracletest2.testnet\", \"initialPrompt\":\"You are a agent who can access Web . Do task iteratively and produce result\"}'",
+    "deploy-delta": "near deploy deltaagenttest4.testnet ./build/delta.wasm --initFunction \"init\" --initArgs '{\"oracleAddress\":\"oracletest2.testnet\"}' --initDeposit 1",
+
+
+    "init-consumer": "near call oracletest2.testnet init '{\"oracleAddress\": \"oracletest2.testnet\"}' --accountId simplegpttest.testnet",
+    "init-oracle": "near call oracletest2.testnet init '{}' --accountId oracletest2.testnet",
+    "init-function": "near call oracletest2.testnet init '{}' --accountId functioncalltest1.testnet",
+    "init-agent": "near call oracletest2.testnet init '{\"initialOracleAddress\": \"oracletest2.testnet\", \"initialPrompt\": \"You are a agent who can access Web . Do task iteratively and produce result\"}' --accountId agentstaging.testnet",
+    
+    "start-chat": "near call simplegpttest.testnet startChat '{\"message\": \"whats your name\"}' --accountId simplegpttest.testnet --gas 300000000000000",
+    "start-function-chat" : "near call functioncalltest1.testnet startChat '{\"message\": \"Get me the current news about US election\"}' --accountId functioncalltest1.testnet --gas 300000000000000",
+    "start-agent-chat": "near call agentstaging.testnet runAgent '{\"query\": \"Get me the current news about US election\", \"maxIterations\": 2}' --accountId agentstaging.testnet --gas 300000000000000",
+    "request-delta": "near call deltaagenttest4.testnet request_Check '{\"message\": \"I need funds it will be raining in 3 days in Bangkok.I need them for mitifation purpose\", \"address\": \"leorocks.testnet\"}' --accountId deltaagenttest4.testnet --gas 300000000000000",
+    
+    "get-messages": "near call simplegpttest.testnet getMessageHistory '{\"chatId\": 56}' --accountId simplegpttest.testnet",
+    "get-run": "near call simplegpttest.testnet getChatRuns '{\"chatId\": 94}' --accountId simplegpttest.testnet",   
+    "get-function-messages": "near call functioncalltest1.testnet getChatRuns '{\"chatId\":  15}' --accountId functioncalltest1.testnet",
+    "get-agent-messages" : "near call agentstaging.testnet getMessageHistory '{\"chatId\": 10}' --accountId agentstaging.testnet",
+     "get-delta-messages": "near call deltaagenttest4.testnet getChatRuns '{\"chatId\":  2}' --accountId deltaagenttest4.testnet",
+     "get-delta-requests": "near call deltaagenttest4.testnet getRequests '{\"requestId\":  3}' --accountId deltaagenttest4.testnet",
+     "get-delta-requests-result": "near call deltaagenttest4.testnet getRequestResults '{\"requestId\":  2}' --accountId deltaagenttest4.testnet",
+
+     "verify-request" : "near call deltaagenttest4.testnet verify_request '{\"id\":  0}' --accountId deltaagenttest4.testnet --gas 300000000000000",
+    "test": "$npm_execpath run build && ava -- ./build/oracle.wasm"
+
+  },
+  "dependencies": {
+    "near-sdk-js": "2.0.0"
+  },
+  "devDependencies": {
+    "ava": "^6.1.3",
+    "near-workspaces": "^3.5.0",
+    "typescript": "^5.4.5"
+  },
+  "ava": {
+    "files": [
+      "sandbox-test/*.ava.js"
+    ]
+  }
+}
