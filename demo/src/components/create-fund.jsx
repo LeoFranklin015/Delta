@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { ReloadIcon } from "@radix-ui/react-icons";
+import { NearContext } from "@/wallets/near";
 
 const formSchema = z.object({
   description: z.string().min(10, {
@@ -39,7 +40,7 @@ const formSchema = z.object({
 
 export function CreateFund() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const { signedAccountId, wallet } = useContext(NearContext);
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {

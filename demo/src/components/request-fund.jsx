@@ -50,14 +50,16 @@ const formSchema = z.object({
 export function RequestFund() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { signedAccountId, wallet } = useContext(NearContext);
+  const [id, setID] = useState(0);
   const CONTRACT = deltaContract;
   const requestFund = async (message) => {
-    await wallet.callMethod({
+    const id = await wallet.callMethod({
       contractId: CONTRACT,
       method: "request_Check",
       args: { message: message, address: signedAccountId },
       gas: "300000000000000",
     });
+    setID(id);
   };
 
   const form = useForm({
@@ -79,6 +81,7 @@ export function RequestFund() {
       description: "Your request has been successfully submitted for review.",
     });
     form.reset();
+    setIsSubmitting(false);
   }
 
   return (
@@ -97,6 +100,10 @@ export function RequestFund() {
             <CardDescription className="text-gray-400">
               Please provide details about the weather conditions and your
               funding needs.
+            </CardDescription>
+
+            <CardDescription className="text-gray-400">
+              id : {id}
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -27,4 +27,4 @@ export const simpleGptContract = "simplegpttest.testnet";
 export const functionGptContract = "functioncalltest1.testnet";
 export const agentGptContract = "agentstaging.testnet";
 
-export const deltaContract = "deltaagenttest4.testnet";
+export const deltaContract = "deltaagenttest6.testnet";

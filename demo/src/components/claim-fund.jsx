@@ -2,9 +2,11 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
+import { NearContext } from "@/wallets/near";
+import { deltaContract } from "@/config";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +30,7 @@ import { toast } from "@/hooks/use-toast";
 import { ReloadIcon } from "@radix-ui/react-icons";
 
 const formSchema = z.object({
+  id: z.string(),
   reason: z.string().min(10, {
     message: "Reason must be at least 10 characters.",
   }),
@@ -41,19 +44,31 @@ const formSchema = z.object({
 
 export function ClaimFund() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const { signedAccountId, wallet } = useContext(NearContext);
+  const CONTRACT = deltaContract;
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      id: 0,
       reason: "",
       impact: "",
       usage: "",
     },
   });
 
-  function onSubmit(values) {
+  const claimFund = async (id) => {
+    await wallet.callMethod({
+      contractId: CONTRACT,
+      method: "verify_request",
+      args: { id: parseInt(id) },
+      gas: "300000000000000",
+    });
+  };
+
+  async function onSubmit(values) {
     setIsSubmitting(true);
     // Simulate API call
+    await claimFund(values.id);
     setTimeout(() => {
       setIsSubmitting(false);
       toast({
@@ -89,6 +104,26 @@ export function ClaimFund() {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-8"
               >
+                <FormField
+                  control={form.control}
+                  name="id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-200">ID</FormLabel>
+                      <FormControl>
+                        <input
+                          placeholder="Enter the ID..."
+                          className="bg-gray-800 border-gray-700 text-white placeholder-gray-500 w-full p-2"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription className="text-gray-400">
+                        Provide the ID associated with your claim.
+                      </FormDescription>
+                      <FormMessage className="text-red-400" />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="reason"
